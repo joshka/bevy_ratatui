@@ -7,7 +7,7 @@ edition = "2021"
 bevy = { version = "0.13.2", features = ["dynamic_linking"] }
 color-eyre = "0.6.3"
 crossterm = "0.27.0"
-ratatui = "0.26.3"
+ratatui = { version = "0.26.3", features = ["unstable-widget-ref"] }
 
 # Enable a small amount of optimization in debug mode
 [profile.dev]
