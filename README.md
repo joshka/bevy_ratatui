@@ -17,3 +17,9 @@ Run the example app:
 ```shell
 cargo run --example demo
 ```
+
+Keys:
+
+- Left / Right - modify the counter (look at what happens when you go negative)
+- Q / Esc - quit
+- P - simulate a panic (tests the color_eyre panic hooks)
