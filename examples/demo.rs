@@ -5,7 +5,9 @@ use bevy::{
     app::{AppExit, ScheduleRunnerPlugin},
     prelude::*,
 };
-use bevy_ratatui::{exit_on_error, CrosstermKeyEvent, RatatuiContext, RatatuiPlugin};
+use bevy_ratatui::{
+    error::exit_on_error, event::KeyEvent, terminal::RatatuiContext, RatatuiPlugin,
+};
 use crossterm::event::KeyCode;
 
 fn main() {
@@ -33,7 +35,7 @@ fn ui_system(mut context: ResMut<RatatuiContext>) -> color_eyre::Result<()> {
 }
 
 fn keyboard_input_system(
-    mut events: EventReader<CrosstermKeyEvent>,
+    mut events: EventReader<KeyEvent>,
     mut app_exit: EventWriter<AppExit>,
 ) -> color_eyre::Result<()> {
     for event in events.read() {
