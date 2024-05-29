@@ -1,6 +1,17 @@
 use bevy::{app::AppExit, prelude::*};
 use crossterm::event::{KeyCode, KeyEventKind, KeyModifiers};
 
+use crate::error::exit_on_error;
+
+pub struct EventPlugin;
+
+impl Plugin for EventPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_event::<KeyEvent>()
+            .add_systems(PreUpdate, crossterm_event_system.pipe(exit_on_error));
+    }
+}
+
 /// Wrapper around `crossterm::event::KeyEvent`.
 #[derive(Debug, Deref, Event, PartialEq, Eq, Clone, Hash)]
 pub struct KeyEvent(pub crossterm::event::KeyEvent);

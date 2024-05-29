@@ -6,6 +6,16 @@ use crossterm::{
 use ratatui::backend::CrosstermBackend;
 use std::io::{self, stdout, Stdout};
 
+use crate::error::exit_on_error;
+
+pub struct TerminalPlugin;
+
+impl Plugin for TerminalPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_systems(Startup, setup_terminal.pipe(exit_on_error));
+    }
+}
+
 pub fn setup_terminal(mut commands: Commands) -> color_eyre::Result<()> {
     let terminal = RatatuiContext::init()?;
     commands.insert_resource(terminal);

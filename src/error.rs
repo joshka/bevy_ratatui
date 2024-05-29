@@ -9,6 +9,14 @@ use color_eyre::{
 
 use crate::terminal::RatatuiContext;
 
+pub struct ErrorPlugin;
+
+impl Plugin for ErrorPlugin {
+    fn build(&self, app: &mut App) {
+        app.add_systems(Startup, setup_error_handling.pipe(exit_on_error));
+    }
+}
+
 /// Installs hooks for panic and error handling.
 ///
 /// Makes the app resilient to panics and errors by restoring the terminal before printing the
