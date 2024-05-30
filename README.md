@@ -23,3 +23,5 @@ Keys:
 - Left / Right - modify the counter (look at what happens when you go negative)
 - Q / Esc - quit
 - P - simulate a panic (tests the color_eyre panic hooks)
+
+![Made with VHS](https://vhs.charm.sh/vhs-2g0S6RgGGQHseTCNItEQhg.gif)

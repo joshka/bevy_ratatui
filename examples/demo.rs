@@ -150,7 +150,7 @@ struct ColorChangeTimer {
 
 fn start_background_color_timer(mut commands: Commands, bg_color: Res<BackgroundColor>) {
     commands.spawn(ColorChangeTimer {
-        timer: Timer::from_seconds(1.0, TimerMode::Once),
+        timer: Timer::from_seconds(2.0, TimerMode::Once),
         start_color: bg_color.0,
     });
 }
@@ -184,8 +184,8 @@ fn background_color_system(
     };
     timer.tick(time.delta());
     let end_color = match app_state.get() {
-        AppState::Negative => Color::Rgb(255, 0, 0),
-        AppState::Positive => Color::Rgb(0, 255, 0),
+        AppState::Negative => Color::Rgb(191, 0, 0),
+        AppState::Positive => Color::Rgb(0, 63, 128),
     };
     bg_color.0 = interpolate(timer.start_color, end_color, timer.fraction())
         .expect("only works for rgb colors");
