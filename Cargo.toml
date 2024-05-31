@@ -1,7 +1,13 @@
 [package]
 name = "bevy_ratatui"
-version = "0.1.0"
+version = "0.3.0"
 edition = "2021"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/joshka/bevy_ratatui"
+documentation = "https://docs.rs/bevy_ratatui"
+authors = ["Joshka"]
+categories = ["command-line-interface"]
+keywords = ["cli", "ratatui", "terminal", "tui", "bevy"]
 
 [dependencies]
 bevy = { version = "0.13.2", default-features = false, features = [
