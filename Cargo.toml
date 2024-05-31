@@ -1,5 +1,6 @@
 [package]
 name = "bevy_ratatui"
+description = "A Bevy plugin for building terminal user interfaces with Ratatui"
 version = "0.3.0"
 edition = "2021"
 license = "MIT OR Apache-2.0"
