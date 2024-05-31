@@ -49,6 +49,13 @@ Keys:
     egui backend to render ratatui apps to the web
   - <https://github.com/sstelfox/bevy_tui> - tui-rs / bevy seems dead (last commit Jan 2023)
 
+## Previous bevy_ratatui crate
+
+Previously there was another crate using this name which has since migrated to
+[ratatui_egui_wasm](https://github.com/gold-silver-copper/ratatui_egui_wasm).  A ratatui backend
+that is also an egui widget. Deploy on web with WASM or ship natively with bevy, macroquad, or
+eframe. Demo at <https://gold-silver-copper.github.io/>
+
 ## License
 
 Copyright (c) Josh McKinney
