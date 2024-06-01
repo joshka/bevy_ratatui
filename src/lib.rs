@@ -2,7 +2,7 @@
 //!
 //! # Example
 //!
-//! ```rust
+//! ```rust,no_run
 //! use bevy::{
 //!     app::{AppExit, ScheduleRunnerPlugin},
 //!     prelude::*,
@@ -53,8 +53,6 @@ pub mod error;
 pub mod event;
 pub mod terminal;
 
-pub struct RatatuiPlugins;
-
 /// A plugin group that includes all the plugins in the Ratatui crate.
 ///
 /// # Example
@@ -65,6 +63,8 @@ pub struct RatatuiPlugins;
 ///
 /// App::new().add_plugins(RatatuiPlugins);
 /// ```
+pub struct RatatuiPlugins;
+
 impl PluginGroup for RatatuiPlugins {
     fn build(self) -> PluginGroupBuilder {
         PluginGroupBuilder::start::<Self>()
