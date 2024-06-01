@@ -1,8 +1,38 @@
+//! Event handling.
+//!
+//! This module provides a plugin for handling events, and a wrapper around
+//! `crossterm::event::KeyEvent`.
+//!
+//! # Example
+//!
+//! ```rust
+//! use bevy::{app::AppExit, prelude::*};
+//! use bevy_ratatui::event::KeyEvent;
+//! use crossterm::event::KeyCode;
+//!
+//! fn keyboard_input_system(mut events: EventReader<KeyEvent>, mut exit: EventWriter<AppExit>) {
+//!     for event in events.read() {
+//!         match event.code {
+//!             KeyCode::Char('q') | KeyCode::Esc => {
+//!                 exit.send(AppExit);
+//!             }
+//!             _ => {}
+//!         }
+//!     }
+//! }
+//! ```
+use std::time::Duration;
+
 use bevy::{app::AppExit, prelude::*};
-use crossterm::event::{KeyCode, KeyEventKind, KeyModifiers};
+use color_eyre::Result;
+use crossterm::event::{self, KeyCode, KeyEventKind, KeyModifiers};
 
 use crate::error::exit_on_error;
 
+/// A plugin for handling events.
+///
+/// This plugin adds the `KeyEvent` event, and a system that reads events from crossterm and sends
+/// them to the `KeyEvent` event.
 pub struct EventPlugin;
 
 impl Plugin for EventPlugin {
@@ -14,22 +44,23 @@ impl Plugin for EventPlugin {
 
 /// Wrapper around `crossterm::event::KeyEvent`.
 #[derive(Debug, Deref, Event, PartialEq, Eq, Clone, Hash)]
-pub struct KeyEvent(pub crossterm::event::KeyEvent);
+pub struct KeyEvent(pub event::KeyEvent);
 
+/// System that reads events from crossterm and sends them to the `KeyEvent` event.
+///
+/// This system reads events from crossterm and sends them to the `KeyEvent` event. It also sends
+/// an `AppExit` event when `Ctrl+C` is pressed.
 pub fn crossterm_event_system(
-    mut app_exit: EventWriter<AppExit>,
-    mut key_events: EventWriter<KeyEvent>,
-) -> color_eyre::Result<()> {
-    while crossterm::event::poll(std::time::Duration::ZERO)? {
-        match crossterm::event::read()? {
-            crossterm::event::Event::Key(event) if event.kind == KeyEventKind::Press => {
-                match (event.modifiers, event.code) {
-                    (KeyModifiers::CONTROL, KeyCode::Char('c')) => {
-                        app_exit.send_default();
-                    }
-                    _ => {}
+    mut exit: EventWriter<AppExit>,
+    mut keys: EventWriter<KeyEvent>,
+) -> Result<()> {
+    while event::poll(Duration::ZERO)? {
+        match event::read()? {
+            event::Event::Key(event) if event.kind == KeyEventKind::Press => {
+                if event.modifiers == KeyModifiers::CONTROL && event.code == KeyCode::Char('c') {
+                    exit.send_default();
                 }
-                key_events.send(KeyEvent(event));
+                keys.send(KeyEvent(event));
             }
             _ => {}
         }

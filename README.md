@@ -1,18 +1,20 @@
 # Bevy_ratatui
 
-An experiment using Ratatui from within a Bevy app.
+An experiment using Ratatui from within a Bevy app. Note that this library is explicitly unstable
+and will break compatibility between 0.x versions.
 
-The goal of this was not to do any rendering / 3D / etc. in the terminal, but just to see how useful
-it is to use the bevy concepts for apps.
+The goal of this (at least to start) is not to do any rendering / 3D / etc. in the terminal, but
+just to see how useful it is to use the bevy concepts for apps. This may change over time.
 
-Demonstrates:
+## Example app
 
-- Resource for the terminal (wrapped in a `Context` struct)
+This app demonstrates:
+
+- Using the `RatatuiContext` resource to draw widgets to the terminal
 - ScheduleRunnerPlugin to run the app loop
-- Events to communicate
-- States to handle changing from one state to another (e.g. positive to negative)
-
-Run the example app:
+- Using `Event`s to communicate
+- Handling `State`s to add logic that runs on transition (e.g. changing the background color when
+  going from Negative to Positive in a simple counter app)
 
 ```shell
 cargo run --example demo
@@ -28,13 +30,13 @@ Keys:
 
 ## Ideas on progressing this
 
-- [ ] Rewrite ratatui terminal as a Bevy SubApp. It's possible that this would allow rendering to
-      happen while the main app is continuing to run
+- [ ] Rewrite Ratatui's `Terminal` as a Bevy SubApp. It's possible that this would allow rendering
+      to happen while the main app is continuing to run
 - [ ] Consider how to handle layout. Bevy has a lot of code related to this which might be possible
       to incorporate
 - [ ] Convert Crossterm events into the bevy standard
 - [ ] Collab with the other bevy/crossterm/ratatui libs
-  - <https://github.com/cxreiff/bevy_rat> - seems like the most recent / up to date thing with some
+  - <https://github.com/cxreiff/bevy_rat> - seems like the most recent / up to date crate with some
     fairly similar ideas. Has some stuff for rendering images to the screen (e.g. spinning 3D cube).
   - <https://github.com/octotep/bevy_crossterm> - Crossterm plugin for the bevy game engine
   - <https://github.com/TheEmeraldBee/widgetui> - A bevy systems like widget system for ratatui and
