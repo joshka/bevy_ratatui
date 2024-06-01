@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [unreleased]
 
+## [0.4.0](https://github.com/joshka/bevy_ratatui/compare/v0.3.0...v0.4.0) - 2024-06-01
+
+### Other
+- Add docs and hello world example ([#2](https://github.com/joshka/bevy_ratatui/pull/2))
+
 - [3e7b6818](https://github.com/joshka/ratatui_bevy/commit/3e7b68186b896b8ddf5ab1a533e511ef8010a791): Initial implementation
 - [f224c58a](https://github.com/joshka/ratatui_bevy/commit/f224c58a6d90807c51153a86ed03e60919d68f8f): Rearrange to modules
 - [2e5a68fa](https://github.com/joshka/ratatui_bevy/commit/2e5a68fa45a09c46c1974f15d4c3ba0caaa7be2e): Add plugin per module
