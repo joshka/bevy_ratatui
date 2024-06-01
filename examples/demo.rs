@@ -23,7 +23,7 @@ fn main() {
     App::new()
         .add_plugins(RatatuiPlugins)
         .add_plugins(MinimalPlugins.set(ScheduleRunnerPlugin::run_loop(frame_rate)))
-        .add_systems(PreUpdate, keyboard_input_system.pipe(exit_on_error))
+        .add_systems(PreUpdate, keyboard_input_system)
         .add_systems(Update, ui_system.pipe(exit_on_error))
         .init_resource::<Counter>()
         .add_event::<CounterEvent>()
@@ -58,7 +58,7 @@ fn keyboard_input_system(
     mut events: EventReader<KeyEvent>,
     mut app_exit: EventWriter<AppExit>,
     mut counter_events: EventWriter<CounterEvent>,
-) -> color_eyre::Result<()> {
+) {
     for event in events.read() {
         match event.code {
             KeyCode::Char('q') | KeyCode::Esc => {
@@ -76,7 +76,6 @@ fn keyboard_input_system(
             _ => {}
         }
     }
-    Ok(())
 }
 
 #[derive(Default, Resource, Debug, Deref, DerefMut)]

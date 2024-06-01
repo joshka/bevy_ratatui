@@ -1,19 +1,33 @@
+//! Error handling for the app.
+//!
+//! This module provides a plugin that sets up error handling for the app. It installs hooks for
+//! panic and error handling that restore the terminal before printing the panic or error message.
+//! This ensures that the error message is not messed up by the terminal state.
+//!
+//! The `exit_on_error` function is used to exit the app if an error occurs. It is used to pipe
+//! results from functions that return `Result` to the `exit_on_error` system. If the result is an
+//! error, the error is logged and the app is exited.
 use std::panic;
 
 use bevy::{app::AppExit, prelude::*};
 use color_eyre::{
     self,
     config::{EyreHook, HookBuilder, PanicHook},
-    eyre,
+    eyre, Result,
 };
 
 use crate::terminal::RatatuiContext;
 
+/// A plugin that sets up error handling.
+///
+/// This plugin installs hooks for panic and error handling that restore the terminal before
+/// printing the panic or error message. This ensures that the error message is not messed up by the
+/// terminal state.
 pub struct ErrorPlugin;
 
 impl Plugin for ErrorPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, setup_error_handling.pipe(exit_on_error));
+        app.add_systems(Startup, setup.pipe(exit_on_error));
     }
 }
 
@@ -22,15 +36,15 @@ impl Plugin for ErrorPlugin {
 /// Makes the app resilient to panics and errors by restoring the terminal before printing the
 /// panic or error message. This prevents error messages from being messed up by the terminal
 /// state.
-pub fn setup_error_handling() -> color_eyre::Result<()> {
+pub fn setup() -> Result<()> {
     let (panic_hook, eyre_hook) = HookBuilder::default().into_hooks();
-    install_panic_hook(panic_hook);
-    install_error_hook(eyre_hook)?;
+    set_panic_hook(panic_hook);
+    set_error_hook(eyre_hook)?;
     Ok(())
 }
 
 /// Install a panic hook that restores the terminal before printing the panic.
-fn install_panic_hook(panic_hook: PanicHook) {
+fn set_panic_hook(panic_hook: PanicHook) {
     let panic_hook = panic_hook.into_panic_hook();
     panic::set_hook(Box::new(move |panic_info| {
         let _ = RatatuiContext::restore();
@@ -39,7 +53,7 @@ fn install_panic_hook(panic_hook: PanicHook) {
 }
 
 /// Install an error hook that restores the terminal before printing the error.
-fn install_error_hook(eyre_hook: EyreHook) -> color_eyre::Result<()> {
+fn set_error_hook(eyre_hook: EyreHook) -> Result<()> {
     let eyre_hook = eyre_hook.into_eyre_hook();
     eyre::set_hook(Box::new(move |error| {
         let _ = RatatuiContext::restore();
@@ -48,7 +62,11 @@ fn install_error_hook(eyre_hook: EyreHook) -> color_eyre::Result<()> {
     Ok(())
 }
 
-pub fn exit_on_error(In(result): In<color_eyre::Result<()>>, mut app_exit: EventWriter<AppExit>) {
+/// Exits the app if an error occurs.
+///
+/// This is used to pipe results from functions that return `Result` to the `exit_on_error` system.
+/// If the result is an error, the error is logged and the app is exited.
+pub fn exit_on_error(In(result): In<Result<()>>, mut app_exit: EventWriter<AppExit>) {
     if let Err(err) = result {
         error!("Error: {:?}", err);
         app_exit.send_default();
