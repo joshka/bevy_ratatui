@@ -25,6 +25,10 @@ use crate::terminal::RatatuiContext;
 /// terminal state.
 pub struct ErrorPlugin;
 
+/// A system that sets up error handling.
+///
+/// This system sets up hooks for panic and error handling. It is used to ensure that the terminal
+/// is restored before printing the panic or error message.
 impl Plugin for ErrorPlugin {
     fn build(&self, app: &mut App) {
         app.add_systems(Startup, setup.pipe(exit_on_error));

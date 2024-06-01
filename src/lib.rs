@@ -65,6 +65,16 @@ pub mod terminal;
 /// ```
 pub struct RatatuiPlugins;
 
+/// A plugin group that includes all the plugins in the Ratatui crate.
+///
+/// # Example
+///
+/// ```rust
+/// use bevy::prelude::*;
+/// use bevy_ratatui::RatatuiPlugins;
+///
+/// App::new().add_plugins(RatatuiPlugins);
+/// ```
 impl PluginGroup for RatatuiPlugins {
     fn build(self) -> PluginGroupBuilder {
         PluginGroupBuilder::start::<Self>()
