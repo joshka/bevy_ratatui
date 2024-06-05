@@ -64,7 +64,18 @@ pub mod terminal;
 ///
 /// App::new().add_plugins(RatatuiPlugins);
 /// ```
-pub struct RatatuiPlugins;
+#[non_exhaustive]
+pub struct RatatuiPlugins {
+    pub enable_kitty_protocol: bool,
+}
+
+impl Default for RatatuiPlugins {
+    fn default() -> Self {
+        Self {
+            enable_kitty_protocol: true,
+        }
+    }
+}
 
 /// A plugin group that includes all the plugins in the Ratatui crate.
 ///
@@ -78,10 +89,14 @@ pub struct RatatuiPlugins;
 /// ```
 impl PluginGroup for RatatuiPlugins {
     fn build(self) -> PluginGroupBuilder {
-        PluginGroupBuilder::start::<Self>()
+        let builder = PluginGroupBuilder::start::<Self>()
             .add(error::ErrorPlugin)
-            .add(kitty::KittyPlugin)
             .add(terminal::TerminalPlugin)
-            .add(event::EventPlugin)
+            .add(event::EventPlugin);
+        if self.enable_kitty_protocol {
+            builder.add(kitty::KittyPlugin)
+        } else {
+            builder
+        }
     }
 }

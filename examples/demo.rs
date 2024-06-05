@@ -21,7 +21,7 @@ use ratatui::{
 fn main() {
     let frame_rate = Duration::from_secs_f64(1. / 60.);
     App::new()
-        .add_plugins(RatatuiPlugins)
+        .add_plugins(RatatuiPlugins::default())
         .add_plugins(MinimalPlugins.set(ScheduleRunnerPlugin::run_loop(frame_rate)))
         .add_systems(PreUpdate, keyboard_input_system)
         .add_systems(Update, ui_system.pipe(exit_on_error))

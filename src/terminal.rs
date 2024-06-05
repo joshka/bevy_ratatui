@@ -11,7 +11,7 @@ use bevy::prelude::*;
 use color_eyre::Result;
 use crossterm::{
     cursor,
-    event::{DisableMouseCapture, EnableMouseCapture, PopKeyboardEnhancementFlags},
+    event::{DisableMouseCapture, EnableMouseCapture},
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
     ExecutableCommand,
 };

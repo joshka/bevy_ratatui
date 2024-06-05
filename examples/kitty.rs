@@ -12,7 +12,7 @@ use ratatui::text::Text;
 fn main() {
     let wait_duration = std::time::Duration::from_secs_f64(1. / 60.); // 60 FPS
     App::new()
-        .add_plugins(RatatuiPlugins)
+        .add_plugins(RatatuiPlugins::default())
         .add_plugins(ScheduleRunnerPlugin::run_loop(wait_duration))
         .add_systems(PreUpdate, keyboard_input_system)
         .add_systems(Update, draw_scene_system.pipe(exit_on_error))
