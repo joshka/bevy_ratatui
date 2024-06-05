@@ -10,7 +10,8 @@ use std::io::{self, stdout, Stdout};
 use bevy::prelude::*;
 use color_eyre::Result;
 use crossterm::{
-    event::{DisableMouseCapture, EnableMouseCapture},
+    cursor,
+    event::{DisableMouseCapture, EnableMouseCapture, PopKeyboardEnhancementFlags},
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
     ExecutableCommand,
 };
@@ -73,7 +74,8 @@ impl RatatuiContext {
     pub fn restore() -> io::Result<()> {
         stdout()
             .execute(LeaveAlternateScreen)?
-            .execute(DisableMouseCapture)?;
+            .execute(DisableMouseCapture)?
+            .execute(cursor::Show)?;
         disable_raw_mode()?;
         Ok(())
     }

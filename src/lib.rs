@@ -51,6 +51,7 @@ use bevy::{app::PluginGroupBuilder, prelude::*};
 
 pub mod error;
 pub mod event;
+pub mod kitty;
 pub mod terminal;
 
 /// A plugin group that includes all the plugins in the Ratatui crate.
@@ -79,6 +80,7 @@ impl PluginGroup for RatatuiPlugins {
     fn build(self) -> PluginGroupBuilder {
         PluginGroupBuilder::start::<Self>()
             .add(error::ErrorPlugin)
+            .add(kitty::KittyPlugin)
             .add(terminal::TerminalPlugin)
             .add(event::EventPlugin)
     }

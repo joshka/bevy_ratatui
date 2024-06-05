@@ -91,8 +91,11 @@ pub fn crossterm_event_system(
     while event::poll(Duration::ZERO)? {
         let event = event::read()?;
         match event {
-            Key(event) if event.kind == KeyEventKind::Press => {
-                if event.modifiers == KeyModifiers::CONTROL && event.code == KeyCode::Char('c') {
+            Key(event) => {
+                if event.kind == KeyEventKind::Press
+                    && event.modifiers == KeyModifiers::CONTROL
+                    && event.code == KeyCode::Char('c')
+                {
                     exit.send_default();
                 }
                 keys.send(KeyEvent(event));
@@ -112,7 +115,6 @@ pub fn crossterm_event_system(
             event::Event::Resize(columns, rows) => {
                 resize.send(ResizeEvent(Size::new(columns, rows)));
             }
-            _ => {}
         }
         events.send(CrosstermEvent(event));
     }
