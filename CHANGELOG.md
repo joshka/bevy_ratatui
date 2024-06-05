@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 ## [unreleased]
 
+## [0.5.0](https://github.com/joshka/bevy_ratatui/compare/v0.4.0...v0.5.0) - 2024-06-05
+
+### Added
+- add rest of crossterm events
+
+### Other
+- Move mouse to separate plugin
+- Make kitty protocol configurable
+- added kitty protocol support. ([#5](https://github.com/joshka/bevy_ratatui/pull/5))
+- add mouse event example
+- Add more docs
+
 ## [0.4.0](https://github.com/joshka/bevy_ratatui/compare/v0.3.0...v0.4.0) - 2024-06-01
 
 ### Other
