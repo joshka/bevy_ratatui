@@ -39,6 +39,11 @@ pub struct EventPlugin;
 impl Plugin for EventPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<KeyEvent>()
+            .add_event::<MouseEvent>()
+            .add_event::<FocusEvent>()
+            .add_event::<ResizeEvent>()
+            .add_event::<PasteEvent>()
+            .add_event::<CrosstermEvent>()
             .add_systems(PreUpdate, crossterm_event_system.pipe(exit_on_error));
     }
 }
@@ -52,7 +57,7 @@ pub struct CrosstermEvent(pub event::Event);
 pub struct KeyEvent(pub event::KeyEvent);
 
 /// An event that is sent whenever a mouse event is read from crossterm.
-#[derive(Debug, Clone, Copy, Event, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Event, PartialEq, Eq, Deref)]
 pub struct MouseEvent(pub event::MouseEvent);
 
 /// An event that is sent when the terminal gains or loses focus.

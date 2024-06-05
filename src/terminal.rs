@@ -10,6 +10,7 @@ use std::io::{self, stdout, Stdout};
 use bevy::prelude::*;
 use color_eyre::Result;
 use crossterm::{
+    event::{DisableMouseCapture, EnableMouseCapture},
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
     ExecutableCommand,
 };
@@ -59,7 +60,9 @@ pub struct RatatuiContext(ratatui::Terminal<CrosstermBackend<Stdout>>);
 impl RatatuiContext {
     /// Initializes the terminal, entering the alternate screen and enabling raw mode.
     pub fn init() -> io::Result<Self> {
-        stdout().execute(EnterAlternateScreen)?;
+        stdout()
+            .execute(EnterAlternateScreen)?
+            .execute(EnableMouseCapture)?;
         enable_raw_mode()?;
         let backend = CrosstermBackend::new(stdout());
         let terminal = ratatui::Terminal::new(backend)?;
@@ -68,7 +71,9 @@ impl RatatuiContext {
 
     /// Restores the terminal, leaving the alternate screen and disabling raw mode.
     pub fn restore() -> io::Result<()> {
-        stdout().execute(LeaveAlternateScreen)?;
+        stdout()
+            .execute(LeaveAlternateScreen)?
+            .execute(DisableMouseCapture)?;
         disable_raw_mode()?;
         Ok(())
     }
