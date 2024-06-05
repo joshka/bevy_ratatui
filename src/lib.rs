@@ -47,56 +47,12 @@
 //! [Bevy]: https://bevyengine.org
 //! [Ratatui]: https://ratatui.rs
 //! [examples]: https://github.com/joshka/bevy_ratatui/tree/main/examples
-use bevy::{app::PluginGroupBuilder, prelude::*};
 
 pub mod error;
 pub mod event;
 pub mod kitty;
+pub mod mouse;
+mod ratatui;
 pub mod terminal;
 
-/// A plugin group that includes all the plugins in the Ratatui crate.
-///
-/// # Example
-///
-/// ```rust
-/// use bevy::prelude::*;
-/// use bevy_ratatui::RatatuiPlugins;
-///
-/// App::new().add_plugins(RatatuiPlugins);
-/// ```
-#[non_exhaustive]
-pub struct RatatuiPlugins {
-    pub enable_kitty_protocol: bool,
-}
-
-impl Default for RatatuiPlugins {
-    fn default() -> Self {
-        Self {
-            enable_kitty_protocol: true,
-        }
-    }
-}
-
-/// A plugin group that includes all the plugins in the Ratatui crate.
-///
-/// # Example
-///
-/// ```rust
-/// use bevy::prelude::*;
-/// use bevy_ratatui::RatatuiPlugins;
-///
-/// App::new().add_plugins(RatatuiPlugins);
-/// ```
-impl PluginGroup for RatatuiPlugins {
-    fn build(self) -> PluginGroupBuilder {
-        let builder = PluginGroupBuilder::start::<Self>()
-            .add(error::ErrorPlugin)
-            .add(terminal::TerminalPlugin)
-            .add(event::EventPlugin);
-        if self.enable_kitty_protocol {
-            builder.add(kitty::KittyPlugin)
-        } else {
-            builder
-        }
-    }
-}
+pub use ratatui::RatatuiPlugins;
