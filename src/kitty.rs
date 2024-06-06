@@ -7,11 +7,13 @@ use crossterm::{
     ExecutableCommand,
 };
 
+use crate::terminal;
+
 pub struct KittyPlugin;
 
 impl Plugin for KittyPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, setup);
+        app.add_systems(Startup, setup.after(terminal::setup));
     }
 }
 
