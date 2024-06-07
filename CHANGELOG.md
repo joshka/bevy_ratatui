@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [unreleased]
 
+## [0.5.1](https://github.com/joshka/bevy_ratatui/compare/v0.5.0...v0.5.1) - 2024-06-07
+
+### Other
+- Ensure kitty setup runs after terminal setup ([#6](https://github.com/joshka/bevy_ratatui/pull/6))
+
 ## [0.5.0](https://github.com/joshka/bevy_ratatui/compare/v0.4.0...v0.5.0) - 2024-06-05
 
 ### Added
