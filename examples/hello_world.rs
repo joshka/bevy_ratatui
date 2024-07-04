@@ -29,7 +29,7 @@ fn keyboard_input_system(mut events: EventReader<KeyEvent>, mut exit: EventWrite
     for event in events.read() {
         match event.code {
             KeyCode::Char('q') | KeyCode::Esc => {
-                exit.send(AppExit);
+                exit.send_default();
             }
             _ => {}
         }

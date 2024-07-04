@@ -61,7 +61,7 @@ fn keyboard_input_system(
     for event in events.read() {
         match event.code {
             KeyCode::Char('q') | KeyCode::Esc => {
-                exit.send(AppExit);
+                exit.send_default();
             }
             _ => {
                 commands.insert_resource(LastKeypress(event.clone()));
