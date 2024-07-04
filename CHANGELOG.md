@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [unreleased]
 
+## [0.5.2](https://github.com/joshka/bevy_ratatui/compare/v0.5.1...v0.5.2) - 2024-06-25
+
+### Other
+- Bump ratatui from 0.26.3 to 0.27.0 in the cargo-dependencies group ([#8](https://github.com/joshka/bevy_ratatui/pull/8))
+
+## [0.5.1](https://github.com/joshka/bevy_ratatui/compare/v0.5.0...v0.5.1) - 2024-06-07
+
+### Other
+- Ensure kitty setup runs after terminal setup ([#6](https://github.com/joshka/bevy_ratatui/pull/6))
+
 ## [0.5.0](https://github.com/joshka/bevy_ratatui/compare/v0.4.0...v0.5.0) - 2024-06-05
 
 ### Added

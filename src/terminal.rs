@@ -7,7 +7,7 @@
 //! and leaves the alternate screen.
 use std::io::{self, stdout, Stdout};
 
-use bevy::prelude::*;
+use bevy::{app::AppExit, prelude::*};
 use color_eyre::Result;
 use crossterm::{
     cursor,
@@ -16,7 +16,7 @@ use crossterm::{
 };
 use ratatui::backend::CrosstermBackend;
 
-use crate::error::exit_on_error;
+use crate::{error::exit_on_error, kitty::KittyEnabled, mouse::MouseCaptureEnabled};
 
 /// A plugin that sets up the terminal.
 ///
@@ -26,7 +26,8 @@ pub struct TerminalPlugin;
 
 impl Plugin for TerminalPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, setup.pipe(exit_on_error));
+        app.add_systems(Startup, setup.pipe(exit_on_error))
+            .add_systems(PostUpdate, cleanup_system);
     }
 }
 
@@ -35,6 +36,15 @@ pub fn setup(mut commands: Commands) -> Result<()> {
     let terminal = RatatuiContext::init()?;
     commands.insert_resource(terminal);
     Ok(())
+}
+
+/// A cleanup system that ensures terminal enhancements are cleaned up in the correct order.
+pub fn cleanup_system(mut commands: Commands, mut exit_reader: EventReader<AppExit>) {
+    for _ in exit_reader.read() {
+        commands.remove_resource::<KittyEnabled>();
+        commands.remove_resource::<MouseCaptureEnabled>();
+        commands.remove_resource::<RatatuiContext>();
+    }
 }
 
 /// A wrapper around ratatui::Terminal that automatically enters and leaves the alternate screen.

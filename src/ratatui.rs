@@ -10,7 +10,7 @@ use crate::{error, event, kitty, mouse, terminal};
 /// use bevy::prelude::*;
 /// use bevy_ratatui::RatatuiPlugins;
 ///
-/// App::new().add_plugins(RatatuiPlugins);
+/// App::new().add_plugins(RatatuiPlugins::default());
 /// ```
 pub struct RatatuiPlugins {
     pub enable_kitty_protocol: bool,
@@ -34,7 +34,7 @@ impl Default for RatatuiPlugins {
 /// use bevy::prelude::*;
 /// use bevy_ratatui::RatatuiPlugins;
 ///
-/// App::new().add_plugins(RatatuiPlugins);
+/// App::new().add_plugins(RatatuiPlugins::default());
 /// ```
 impl PluginGroup for RatatuiPlugins {
     fn build(self) -> PluginGroupBuilder {
