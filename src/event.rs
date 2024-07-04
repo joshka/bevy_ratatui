@@ -14,7 +14,7 @@
 //!     for event in events.read() {
 //!         match event.code {
 //!             KeyCode::Char('q') | KeyCode::Esc => {
-//!                 exit.send(AppExit);
+//!                 exit.send_default();
 //!             }
 //!             _ => {}
 //!         }
