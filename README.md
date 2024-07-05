@@ -28,6 +28,13 @@ Keys:
 
 ![Made with VHS](https://vhs.charm.sh/vhs-2g0S6RgGGQHseTCNItEQhg.gif)
 
+## Compatible Bevy versions
+
+| bevy  | bevy_ratatui |
+|-------|--------------|
+| 0.14  | 0.6          |
+| 0.13  | 0.5          |
+
 ## Ideas on progressing this
 
 - [ ] Rewrite Ratatui's `Terminal` as a Bevy SubApp. It's possible that this would allow rendering
