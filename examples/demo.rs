@@ -5,6 +5,7 @@ use bevy::{
     app::{AppExit, ScheduleRunnerPlugin},
     core::FrameCount,
     prelude::*,
+    state::app::StatesPlugin,
 };
 use bevy_ratatui::{
     error::exit_on_error, event::KeyEvent, terminal::RatatuiContext, RatatuiPlugins,
@@ -23,6 +24,7 @@ fn main() {
     App::new()
         .add_plugins(RatatuiPlugins::default())
         .add_plugins(MinimalPlugins.set(ScheduleRunnerPlugin::run_loop(frame_rate)))
+        .add_plugins(StatesPlugin)
         .add_systems(PreUpdate, keyboard_input_system)
         .add_systems(Update, ui_system.pipe(exit_on_error))
         .init_resource::<Counter>()
