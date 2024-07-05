@@ -320,7 +320,7 @@ checksum = "c115c97a5c8a263bd0aa7001b999772c744ac5ba797d07c86f25734ce381ea69"
 
 [[package]]
 name = "bevy_ratatui"
-version = "0.5.2"
+version = "0.5.3"
 dependencies = [
  "bevy",
  "color-eyre",
