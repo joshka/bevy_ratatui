@@ -71,7 +71,7 @@ impl Plugin for EventPlugin {
                 PreUpdate,
                 crossterm_event_system
                     .pipe(exit_on_error)
-                    .in_set(InputSet::CrosstermEmit),
+                    .in_set(InputSet::EmitCrossterm),
             );
     }
 }

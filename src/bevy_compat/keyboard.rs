@@ -20,7 +20,7 @@ impl Plugin for KeyboardPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(bevy::input::InputPlugin)
             .add_systems(Startup, setup_window)
-            .add_systems(PreUpdate, send_key_events.in_set(InputSet::BevyEmit));
+            .add_systems(PreUpdate, send_key_events.in_set(InputSet::EmitBevy));
     }
 }
 
