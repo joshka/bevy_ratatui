@@ -105,18 +105,12 @@ fn keyboard_input_system(
     }
 }
 
-fn bevy_keyboard_input_system(
-    mut events: EventReader<KeyboardInput>,
-    mut commands: Commands,
-) {
+fn bevy_keyboard_input_system(mut events: EventReader<KeyboardInput>, mut commands: Commands) {
     for event in events.read() {
         commands.insert_resource(LastBevyKeypress(event.clone()));
     }
 }
 
-fn bevy_keypresses(
-    keys: Res<ButtonInput<KeyCode>>,
-    mut commands: Commands,
-) {
+fn bevy_keypresses(keys: Res<ButtonInput<KeyCode>>, mut commands: Commands) {
     commands.insert_resource(BevyKeypresses(keys.get_pressed().cloned().collect()));
 }

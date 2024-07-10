@@ -54,7 +54,13 @@ impl Plugin for EventPlugin {
             .add_event::<CrosstermEvent>()
             .configure_sets(
                 Update,
-                (InputSet::Pre, InputSet::CrosstermEmit, InputSet::BevyEmit, InputSet::Post).chain(),
+                (
+                    InputSet::Pre,
+                    InputSet::CrosstermEmit,
+                    InputSet::BevyEmit,
+                    InputSet::Post,
+                )
+                    .chain(),
             )
             .add_systems(
                 PreUpdate,

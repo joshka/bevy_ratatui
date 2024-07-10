@@ -1,10 +1,9 @@
-
 use bevy::{
     input::{keyboard::KeyboardInput, ButtonState},
     prelude::*,
     window::PrimaryWindow,
 };
-use crossterm::event::{KeyModifiers};
+use crossterm::event::KeyModifiers;
 
 use crate::{
     event::{InputSet, KeyEvent},
@@ -15,13 +14,13 @@ use crate::{
 ///
 /// You can use bevy's regular `ButtonInput<KeyCode>` or bevy_ratatui's
 /// `EventReader<KeyEvent>`.
-pub struct BevyInputPlugin;
+pub struct KeyboardPlugin;
 
-impl Plugin for BevyInputPlugin {
+impl Plugin for KeyboardPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(bevy::input::InputPlugin)
-           .add_systems(Startup, setup_window)
-           .add_systems(PreUpdate, send_key_events.in_set(InputSet::BevyEmit));
+            .add_systems(Startup, setup_window)
+            .add_systems(PreUpdate, send_key_events.in_set(InputSet::BevyEmit));
     }
 }
 
