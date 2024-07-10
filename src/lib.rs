@@ -48,12 +48,12 @@
 //! [Ratatui]: https://ratatui.rs
 //! [examples]: https://github.com/joshka/bevy_ratatui/tree/main/examples
 
+mod bevy_event;
 pub mod error;
 pub mod event;
 pub mod kitty;
 pub mod mouse;
 mod ratatui;
-mod bevy_event;
 pub mod terminal;
 
 pub use ratatui::RatatuiPlugins;

@@ -1,10 +1,7 @@
 use bevy::{
     app::{AppExit, ScheduleRunnerPlugin},
+    input::{keyboard::KeyboardInput, ButtonState},
     prelude::*,
-    input::{
-        ButtonState,
-        keyboard::KeyboardInput,
-    }
 };
 use bevy_ratatui::{
     error::exit_on_error, event::KeyEvent, kitty::KittyEnabled, terminal::RatatuiContext,
@@ -18,7 +15,14 @@ fn main() {
     App::new()
         .add_plugins(RatatuiPlugins::default())
         .add_plugins(ScheduleRunnerPlugin::run_loop(wait_duration))
-        .add_systems(PreUpdate, (keyboard_input_system, bevy_keyboard_input_system, bevy_keypresses))
+        .add_systems(
+            PreUpdate,
+            (
+                keyboard_input_system,
+                bevy_keyboard_input_system,
+                bevy_keypresses,
+            ),
+        )
         // .add_systems(PreUpdate, (keyboard_input_system, bevy_keyboard_input_system))
         .add_systems(Update, draw_scene_system.pipe(exit_on_error))
         .run();

@@ -1,6 +1,6 @@
 use bevy::{app::PluginGroupBuilder, prelude::*};
 
-use crate::{error, event, kitty, mouse, terminal, bevy_event};
+use crate::{bevy_event, error, event, kitty, mouse, terminal};
 
 /// A plugin group that includes all the plugins in the Ratatui crate.
 ///

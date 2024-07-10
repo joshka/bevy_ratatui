@@ -1,24 +1,27 @@
 use std::time::Duration;
 
-use bevy::{app::AppExit, prelude::*};
-use bevy::input::{
-    ButtonState,
-    keyboard::KeyboardInput
+use bevy::{
+    app::AppExit,
+    input::{keyboard::KeyboardInput, ButtonState},
+    prelude::*,
+    window::{PrimaryWindow, WindowCreated, WindowResized},
 };
 use color_eyre::Result;
 use crossterm::event::{self, Event::Key, KeyCode, KeyEventKind, KeyModifiers};
 use ratatui::layout::Size;
-use bevy::window::{PrimaryWindow, WindowCreated, WindowResized};
-use crate::kitty::KittyEnabled;
-use crate::event::{KeyEvent, InputSet};
+
+use crate::{
+    event::{InputSet, KeyEvent},
+    kitty::KittyEnabled,
+};
 
 pub struct BevyEventPlugin;
 
 impl Plugin for BevyEventPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(bevy::input::InputPlugin)
-           .add_systems(Startup, setup_window)
-           .add_systems(PreUpdate, send_key_events.in_set(InputSet::Post));
+            .add_systems(Startup, setup_window)
+            .add_systems(PreUpdate, send_key_events.in_set(InputSet::Post));
     }
 }
 
@@ -31,12 +34,13 @@ impl Default for Modifiers {
     }
 }
 
-fn send_key_events(mut keys: EventReader<KeyEvent>,
-                   kitty_enabled: Option<Res<KittyEnabled>>,
-                   window: Query<Entity, With<PrimaryWindow>>,
-                   mut modifiers: Local<Modifiers>,
-                   mut backlog: Local<Vec<KeyboardInput>>,
-                   mut keyboard_input: EventWriter<KeyboardInput>
+fn send_key_events(
+    mut keys: EventReader<KeyEvent>,
+    kitty_enabled: Option<Res<KittyEnabled>>,
+    window: Query<Entity, With<PrimaryWindow>>,
+    mut modifiers: Local<Modifiers>,
+    mut backlog: Local<Vec<KeyboardInput>>,
+    mut keyboard_input: EventWriter<KeyboardInput>,
 ) {
     let bevy_window = window.single();
     for e in backlog.drain(..) {
@@ -51,11 +55,16 @@ fn send_key_events(mut keys: EventReader<KeyEvent>,
                     let state = if mods.contains(flag) {
                         // This flag has been added.
                         bevy::input::ButtonState::Pressed
-                    } else { // modifiers.contains(flag)
+                    } else {
+                        // modifiers.contains(flag)
                         // This flag has been removed.
                         bevy::input::ButtonState::Released
                     };
-                    keyboard_input.send(modifier_to_bevy(crossterm_modifier_to_bevy_key(flag), state, bevy_window));
+                    keyboard_input.send(modifier_to_bevy(
+                        crossterm_modifier_to_bevy_key(flag),
+                        state,
+                        bevy_window,
+                    ));
                 }
                 **modifiers = mods;
             }
@@ -69,12 +78,12 @@ fn send_key_events(mut keys: EventReader<KeyEvent>,
             keyboard_input.send(bevy_event);
         }
     }
-
 }
 
 /// This is a dummy window to satisfy the [KeyboardInput] struct.
-fn setup_window(mut commands: Commands,
-                // mut window_created: EventWriter<WindowCreated>
+fn setup_window(
+    mut commands: Commands,
+    // mut window_created: EventWriter<WindowCreated>
 ) {
     // Insert our window entity so that other parts of our app can use them
     let bevy_window = commands.spawn(PrimaryWindow).id();
@@ -85,12 +94,12 @@ fn setup_window(mut commands: Commands,
     // });
 }
 
-
-fn modifier_to_bevy(modifier: bevy::input::keyboard::Key, state: bevy::input::ButtonState, window: Entity)
-                    -> bevy::input::keyboard::KeyboardInput {
-
-    use bevy::input::keyboard::Key as k;
-    use bevy::input::keyboard::KeyCode as c;
+fn modifier_to_bevy(
+    modifier: bevy::input::keyboard::Key,
+    state: bevy::input::ButtonState,
+    window: Entity,
+) -> bevy::input::keyboard::KeyboardInput {
+    use bevy::input::keyboard::{Key as k, KeyCode as c};
     let key_code = match modifier {
         k::Control => c::ControlLeft,
         k::Shift => c::ShiftLeft,
@@ -120,7 +129,7 @@ fn key_event_to_bevy(
         code,
         modifiers,
         kind,
-        state: _state
+        state: _state,
     } = key_event;
     let state = match kind {
         crossterm::event::KeyEventKind::Press => bevy::input::ButtonState::Pressed,
@@ -151,8 +160,7 @@ fn to_bevy_keycode(
     crossterm::event::KeyModifiers,
 )> {
     use bevy::input::keyboard::KeyCode as b;
-    use crossterm::event::KeyCode as c;
-    use crossterm::event::KeyModifiers as m;
+    use crossterm::event::{KeyCode as c, KeyModifiers as m};
     let mut mods = crossterm::event::KeyModifiers::empty();
     match key_code {
         c::Backspace => Some(b::Backspace),
@@ -247,41 +255,41 @@ fn to_bevy_keycode(
             '{' => {
                 mods |= m::SHIFT;
                 Some(b::BracketLeft)
-            },
+            }
             '}' => {
                 mods |= m::SHIFT;
                 Some(b::BracketRight)
-            },
+            }
             ',' => Some(b::Comma),
             '=' => Some(b::Equal),
             '<' => {
                 mods |= m::SHIFT;
                 Some(b::Comma)
-            },
+            }
             '+' => {
                 mods |= m::SHIFT;
                 Some(b::Equal)
-            },
+            }
             '.' => Some(b::Period),
             '>' => {
                 mods |= m::SHIFT;
                 Some(b::Period)
-            },
+            }
             '\'' => Some(b::Quote),
             '"' => {
                 mods |= m::SHIFT;
                 Some(b::Quote)
-            },
+            }
             ';' => Some(b::Semicolon),
             ':' => {
                 mods |= m::SHIFT;
                 Some(b::Semicolon)
-            },
+            }
             '/' => Some(b::Slash),
             '?' => {
                 mods |= m::SHIFT;
                 Some(b::Slash)
-            },
+            }
             ' ' => Some(b::Space),
             '1' => Some(b::Digit1),
             '2' => Some(b::Digit2),
@@ -322,107 +330,107 @@ fn to_bevy_keycode(
             'A' => {
                 mods |= m::SHIFT;
                 Some(b::KeyA)
-            },
+            }
             'B' => {
                 mods |= m::SHIFT;
                 Some(b::KeyB)
-            },
+            }
             'C' => {
                 mods |= m::SHIFT;
                 Some(b::KeyC)
-            },
+            }
             'D' => {
                 mods |= m::SHIFT;
                 Some(b::KeyD)
-            },
+            }
             'E' => {
                 mods |= m::SHIFT;
                 Some(b::KeyE)
-            },
+            }
             'F' => {
                 mods |= m::SHIFT;
                 Some(b::KeyF)
-            },
+            }
             'G' => {
                 mods |= m::SHIFT;
                 Some(b::KeyG)
-            },
+            }
             'H' => {
                 mods |= m::SHIFT;
                 Some(b::KeyH)
-            },
+            }
             'I' => {
                 mods |= m::SHIFT;
                 Some(b::KeyI)
-            },
+            }
             'J' => {
                 mods |= m::SHIFT;
                 Some(b::KeyJ)
-            },
+            }
             'K' => {
                 mods |= m::SHIFT;
                 Some(b::KeyK)
-            },
+            }
             'L' => {
                 mods |= m::SHIFT;
                 Some(b::KeyL)
-            },
+            }
             'M' => {
                 mods |= m::SHIFT;
                 Some(b::KeyM)
-            },
+            }
             'N' => {
                 mods |= m::SHIFT;
                 Some(b::KeyN)
-            },
+            }
             'O' => {
                 mods |= m::SHIFT;
                 Some(b::KeyO)
-            },
+            }
             'P' => {
                 mods |= m::SHIFT;
                 Some(b::KeyP)
-            },
+            }
             'Q' => {
                 mods |= m::SHIFT;
                 Some(b::KeyQ)
-            },
+            }
             'R' => {
                 mods |= m::SHIFT;
                 Some(b::KeyR)
-            },
+            }
             'S' => {
                 mods |= m::SHIFT;
                 Some(b::KeyS)
-            },
+            }
             'T' => {
                 mods |= m::SHIFT;
                 Some(b::KeyT)
-            },
+            }
             'U' => {
                 mods |= m::SHIFT;
                 Some(b::KeyU)
-            },
+            }
             'V' => {
                 mods |= m::SHIFT;
                 Some(b::KeyV)
-            },
+            }
             'W' => {
                 mods |= m::SHIFT;
                 Some(b::KeyW)
-            },
+            }
             'X' => {
                 mods |= m::SHIFT;
                 Some(b::KeyX)
-            },
+            }
             'Y' => {
                 mods |= m::SHIFT;
                 Some(b::KeyY)
-            },
+            }
             'Z' => {
                 mods |= m::SHIFT;
                 Some(b::KeyZ)
-            },
+            }
             _ => None,
         },
         c::Null => None,
@@ -575,11 +583,13 @@ fn to_bevy_key(key_code: &crossterm::event::KeyCode) -> Option<bevy::input::keyb
     }
 }
 
-fn crossterm_modifier_to_bevy_key(modifier: crossterm::event::KeyModifiers) -> bevy::input::keyboard::Key {
+fn crossterm_modifier_to_bevy_key(
+    modifier: crossterm::event::KeyModifiers,
+) -> bevy::input::keyboard::Key {
     let mut i = modifier.into_iter();
     let modifier = i.next().expect("mod");
-    use crossterm::event::KeyModifiers as c;
     use bevy::input::keyboard::Key as k;
+    use crossterm::event::KeyModifiers as c;
     let result = match modifier {
         c::SHIFT => k::Shift,
         c::CONTROL => k::Control,

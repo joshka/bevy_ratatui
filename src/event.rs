@@ -55,7 +55,12 @@ impl Plugin for EventPlugin {
                 Update,
                 (InputSet::Pre, InputSet::Emit, InputSet::Post).chain(),
             )
-            .add_systems(PreUpdate, crossterm_event_system.pipe(exit_on_error).in_set(InputSet::Emit));
+            .add_systems(
+                PreUpdate,
+                crossterm_event_system
+                    .pipe(exit_on_error)
+                    .in_set(InputSet::Emit),
+            );
     }
 }
 
@@ -132,4 +137,3 @@ pub fn crossterm_event_system(
     }
     Ok(())
 }
-
