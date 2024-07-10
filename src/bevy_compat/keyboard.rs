@@ -1,3 +1,8 @@
+use std::{
+    collections::HashSet,
+    hash::{Hash, Hasher},
+};
+
 use bevy::{
     input::{keyboard::KeyboardInput, ButtonState},
     prelude::*,
@@ -33,18 +38,45 @@ impl Default for Modifiers {
     }
 }
 
+// I wish KeyboardInput had the Hash derive.
+// TODO: Drop this if KeyboardInput get a Hash impl.
+#[derive(Deref, DerefMut, PartialEq, Eq)]
+struct KeyInput(KeyboardInput);
+
+impl Hash for KeyInput {
+    fn hash<H>(&self, state: &mut H)
+    where
+        H: Hasher,
+    {
+        self.key_code.hash(state);
+        self.logical_key.hash(state);
+        self.state.hash(state);
+        self.window.hash(state);
+    }
+}
+
+/// This is a double-buffer for the last keys pressed.
+///
+/// - `.0` is current frame's last keys pressed.
+/// - `.1` is the next frame's last keys pressed.
+#[derive(Default)]
+struct LastPress(HashSet<KeyInput>, HashSet<KeyInput>);
+
+impl LastPress {
+    fn swap(&mut self) {
+        std::mem::swap(&mut self.0, &mut self.1);
+    }
+}
+
 fn send_key_events(
     mut keys: EventReader<KeyEvent>,
     kitty_enabled: Option<Res<KittyEnabled>>,
     window: Query<Entity, With<PrimaryWindow>>,
     mut modifiers: Local<Modifiers>,
-    mut backlog: Local<Vec<KeyboardInput>>,
+    mut last_pressed: Local<LastPress>,
     mut keyboard_input: EventWriter<KeyboardInput>,
 ) {
     let bevy_window = window.single();
-    for e in backlog.drain(..) {
-        keyboard_input.send(e);
-    }
     for key_event in keys.read() {
         if let Some((bevy_event, mods)) = key_event_to_bevy(key_event, bevy_window) {
             // dbg!(mods, *modifiers);
@@ -69,14 +101,26 @@ fn send_key_events(
             }
             if kitty_enabled.is_none() {
                 // Must send the release events ourselves.
-                backlog.push(KeyboardInput {
-                    state: ButtonState::Released,
-                    ..bevy_event.clone()
-                });
+                let wrapped = KeyInput(bevy_event.clone());
+                if let Some(last_press) = last_pressed.0.take(&wrapped) {
+                    // It's being held down. Pass to the next frame.
+                    last_pressed.1.insert(last_press);
+                } else {
+                    last_pressed.1.insert(wrapped);
+                    keyboard_input.send(bevy_event);
+                }
+            } else {
+                keyboard_input.send(bevy_event);
             }
-            keyboard_input.send(bevy_event);
         }
     }
+    for e in last_pressed.0.drain() {
+        keyboard_input.send(KeyboardInput {
+            state: ButtonState::Released,
+            ..e.0
+        });
+    }
+    last_pressed.swap();
 }
 
 /// This is a dummy window to satisfy the [KeyboardInput] struct.
