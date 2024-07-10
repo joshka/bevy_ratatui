@@ -48,7 +48,7 @@
 //! [Ratatui]: https://ratatui.rs
 //! [examples]: https://github.com/joshka/bevy_ratatui/tree/main/examples
 
-mod bevy_event;
+mod bevy_input;
 pub mod error;
 pub mod event;
 pub mod kitty;

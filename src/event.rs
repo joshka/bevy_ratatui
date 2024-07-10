@@ -33,7 +33,8 @@ use crate::error::exit_on_error;
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
 pub enum InputSet {
     Pre,
-    Emit,
+    CrosstermEmit,
+    BevyEmit,
     Post,
 }
 
@@ -53,13 +54,13 @@ impl Plugin for EventPlugin {
             .add_event::<CrosstermEvent>()
             .configure_sets(
                 Update,
-                (InputSet::Pre, InputSet::Emit, InputSet::Post).chain(),
+                (InputSet::Pre, InputSet::CrosstermEmit, InputSet::BevyEmit, InputSet::Post).chain(),
             )
             .add_systems(
                 PreUpdate,
                 crossterm_event_system
                     .pipe(exit_on_error)
-                    .in_set(InputSet::Emit),
+                    .in_set(InputSet::CrosstermEmit),
             );
     }
 }

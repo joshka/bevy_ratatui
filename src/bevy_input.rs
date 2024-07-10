@@ -15,13 +15,17 @@ use crate::{
     kitty::KittyEnabled,
 };
 
-pub struct BevyEventPlugin;
+/// Pass crossterm key events through to bevy's input system.
+///
+/// You can use bevy's regular `ButtonInput<KeyCode>` or bevy_ratatui's
+/// `EventReader<KeyEvent>`.
+pub struct BevyInputPlugin;
 
-impl Plugin for BevyEventPlugin {
+impl Plugin for BevyInputPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(bevy::input::InputPlugin)
-            .add_systems(Startup, setup_window)
-            .add_systems(PreUpdate, send_key_events.in_set(InputSet::Post));
+           .add_systems(Startup, setup_window)
+           .add_systems(PreUpdate, send_key_events.in_set(InputSet::BevyEmit));
     }
 }
 
@@ -86,7 +90,7 @@ fn setup_window(
     // mut window_created: EventWriter<WindowCreated>
 ) {
     // Insert our window entity so that other parts of our app can use them
-    let bevy_window = commands.spawn(PrimaryWindow).id();
+    let _bevy_window = commands.spawn(PrimaryWindow).id();
 
     // Publish to the app that a terminal window has been created
     // window_created.send(WindowCreated {
