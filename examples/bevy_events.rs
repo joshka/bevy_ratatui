@@ -18,7 +18,8 @@ fn main() {
     App::new()
         .add_plugins(RatatuiPlugins::default())
         .add_plugins(ScheduleRunnerPlugin::run_loop(wait_duration))
-        .add_systems(PreUpdate, (keyboard_input_system, bevy_keyboard_input_system))
+        .add_systems(PreUpdate, (keyboard_input_system, bevy_keyboard_input_system, bevy_keypresses))
+        // .add_systems(PreUpdate, (keyboard_input_system, bevy_keyboard_input_system))
         .add_systems(Update, draw_scene_system.pipe(exit_on_error))
         .run();
 }
@@ -29,11 +30,15 @@ struct LastKeypress(pub KeyEvent);
 #[derive(Resource, Deref, DerefMut)]
 struct LastBevyKeypress(pub KeyboardInput);
 
+#[derive(Resource, Deref, DerefMut)]
+struct BevyKeypresses(pub Vec<KeyCode>);
+
 fn draw_scene_system(
     mut context: ResMut<RatatuiContext>,
     kitty_enabled: Option<Res<KittyEnabled>>,
     last_keypress: Option<Res<LastKeypress>>,
     last_bevy_keypress: Option<Res<LastBevyKeypress>>,
+    bevy_keypresses: Option<Res<BevyKeypresses>>,
 ) -> color_eyre::Result<()> {
     context.draw(|frame| {
         let mut text = Text::raw(if kitty_enabled.is_some() {
@@ -63,6 +68,14 @@ fn draw_scene_system(
             };
             text.push_line("");
             text.push_line(format!("bevy {code_string} key was {kind_string}!"));
+        }
+
+        if let Some(key_presses) = bevy_keypresses {
+            text.push_line("");
+            for key_press in &key_presses.0 {
+                let code_string = format!("{:?}", key_press);
+                text.push_line(format!("bevy {code_string} key was repeated!"));
+            }
         }
 
         frame.render_widget(text.centered(), frame.size())
@@ -96,4 +109,12 @@ fn bevy_keyboard_input_system(
     for event in events.read() {
         commands.insert_resource(LastBevyKeypress(event.clone()));
     }
+}
+
+fn bevy_keypresses(
+    mut keys: Res<ButtonInput<KeyCode>>,
+    mut exit: EventWriter<AppExit>,
+    mut commands: Commands,
+) {
+    commands.insert_resource(BevyKeypresses(keys.get_pressed().cloned().collect()));
 }

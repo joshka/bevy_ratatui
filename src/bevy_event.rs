@@ -1,11 +1,15 @@
 use std::time::Duration;
 
 use bevy::{app::AppExit, prelude::*};
-use bevy::input::keyboard::KeyboardInput;
+use bevy::input::{
+    ButtonState,
+    keyboard::KeyboardInput
+};
 use color_eyre::Result;
 use crossterm::event::{self, Event::Key, KeyCode, KeyEventKind, KeyModifiers};
 use ratatui::layout::Size;
 use bevy::window::{PrimaryWindow, WindowCreated, WindowResized};
+use crate::kitty::KittyEnabled;
 use crate::event::{KeyEvent, InputSet};
 
 pub struct BevyEventPlugin;
@@ -28,11 +32,16 @@ impl Default for Modifiers {
 }
 
 fn send_key_events(mut keys: EventReader<KeyEvent>,
+                   kitty_enabled: Option<Res<KittyEnabled>>,
                    window: Query<Entity, With<PrimaryWindow>>,
                    mut modifiers: Local<Modifiers>,
+                   mut backlog: Local<Vec<KeyboardInput>>,
                    mut keyboard_input: EventWriter<KeyboardInput>
 ) {
     let bevy_window = window.single();
+    for e in backlog.drain(..) {
+        keyboard_input.send(e);
+    }
     for key_event in keys.read() {
         if let Some((bevy_event, mods)) = key_event_to_bevy(&key_event, bevy_window) {
             // dbg!(mods, *modifiers);
@@ -49,6 +58,13 @@ fn send_key_events(mut keys: EventReader<KeyEvent>,
                     keyboard_input.send(modifier_to_bevy(crossterm_modifier_to_bevy_key(flag), state, bevy_window));
                 }
                 **modifiers = mods;
+            }
+            if kitty_enabled.is_none() {
+                // Must send the release events ourselves.
+                backlog.push(KeyboardInput {
+                    state: ButtonState::Released,
+                    ..bevy_event.clone()
+                });
             }
             keyboard_input.send(bevy_event);
         }
