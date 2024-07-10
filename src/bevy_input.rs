@@ -1,14 +1,10 @@
-use std::time::Duration;
 
 use bevy::{
-    app::AppExit,
     input::{keyboard::KeyboardInput, ButtonState},
     prelude::*,
-    window::{PrimaryWindow, WindowCreated, WindowResized},
+    window::PrimaryWindow,
 };
-use color_eyre::Result;
-use crossterm::event::{self, Event::Key, KeyCode, KeyEventKind, KeyModifiers};
-use ratatui::layout::Size;
+use crossterm::event::{KeyModifiers};
 
 use crate::{
     event::{InputSet, KeyEvent},
@@ -51,7 +47,7 @@ fn send_key_events(
         keyboard_input.send(e);
     }
     for key_event in keys.read() {
-        if let Some((bevy_event, mods)) = key_event_to_bevy(&key_event, bevy_window) {
+        if let Some((bevy_event, mods)) = key_event_to_bevy(key_event, bevy_window) {
             // dbg!(mods, *modifiers);
             if mods != **modifiers {
                 let delta = mods.symmetric_difference(**modifiers);
@@ -603,6 +599,6 @@ fn crossterm_modifier_to_bevy_key(
         c::META => k::Meta,
         x => panic!("Given a modifier of {x:?}"),
     };
-    assert!(i.next() == None);
+    assert!(i.next().is_none());
     result
 }

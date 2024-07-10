@@ -107,7 +107,6 @@ fn keyboard_input_system(
 
 fn bevy_keyboard_input_system(
     mut events: EventReader<KeyboardInput>,
-    mut exit: EventWriter<AppExit>,
     mut commands: Commands,
 ) {
     for event in events.read() {
@@ -116,8 +115,7 @@ fn bevy_keyboard_input_system(
 }
 
 fn bevy_keypresses(
-    mut keys: Res<ButtonInput<KeyCode>>,
-    mut exit: EventWriter<AppExit>,
+    keys: Res<ButtonInput<KeyCode>>,
     mut commands: Commands,
 ) {
     commands.insert_resource(BevyKeypresses(keys.get_pressed().cloned().collect()));
