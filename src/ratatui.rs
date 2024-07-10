@@ -1,6 +1,6 @@
 use bevy::{app::PluginGroupBuilder, prelude::*};
 
-use crate::{error, event, kitty, mouse, terminal};
+use crate::{error, event, kitty, mouse, terminal, bevy_event};
 
 /// A plugin group that includes all the plugins in the Ratatui crate.
 ///
@@ -41,7 +41,8 @@ impl PluginGroup for RatatuiPlugins {
         let mut builder = PluginGroupBuilder::start::<Self>()
             .add(error::ErrorPlugin)
             .add(terminal::TerminalPlugin)
-            .add(event::EventPlugin);
+            .add(event::EventPlugin)
+            .add(bevy_event::BevyEventPlugin);
         if self.enable_kitty_protocol {
             builder = builder.add(kitty::KittyPlugin);
         }

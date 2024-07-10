@@ -327,6 +327,7 @@ dependencies = [
  "crossterm",
  "rand",
  "ratatui",
+ "smol_str",
 ]
 
 [[package]]

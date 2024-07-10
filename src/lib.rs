@@ -53,6 +53,7 @@ pub mod event;
 pub mod kitty;
 pub mod mouse;
 mod ratatui;
+mod bevy_event;
 pub mod terminal;
 
 pub use ratatui::RatatuiPlugins;

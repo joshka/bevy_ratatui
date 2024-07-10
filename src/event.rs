@@ -30,6 +30,13 @@ use ratatui::layout::Size;
 
 use crate::error::exit_on_error;
 
+#[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
+pub enum InputSet {
+    Pre,
+    Emit,
+    Post,
+}
+
 /// A plugin for handling events.
 ///
 /// This plugin adds the `KeyEvent` event, and a system that reads events from crossterm and sends
@@ -44,7 +51,11 @@ impl Plugin for EventPlugin {
             .add_event::<ResizeEvent>()
             .add_event::<PasteEvent>()
             .add_event::<CrosstermEvent>()
-            .add_systems(PreUpdate, crossterm_event_system.pipe(exit_on_error));
+            .configure_sets(
+                Update,
+                (InputSet::Pre, InputSet::Emit, InputSet::Post).chain(),
+            )
+            .add_systems(PreUpdate, crossterm_event_system.pipe(exit_on_error).in_set(InputSet::Emit));
     }
 }
 
@@ -98,6 +109,7 @@ pub fn crossterm_event_system(
                 {
                     exit.send_default();
                 }
+
                 keys.send(KeyEvent(event));
             }
             event::Event::FocusLost => {
@@ -120,3 +132,4 @@ pub fn crossterm_event_system(
     }
     Ok(())
 }
+
