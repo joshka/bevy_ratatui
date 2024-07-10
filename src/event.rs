@@ -30,11 +30,16 @@ use ratatui::layout::Size;
 
 use crate::error::exit_on_error;
 
+/// InputSet defines when the input events are emitted.
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
 pub enum InputSet {
+    /// Run before any input events are emitted.
     Pre,
-    CrosstermEmit,
-    BevyEmit,
+    /// Emit the crossterm events.
+    EmitCrossterm,
+    /// Emit the bevy events if [crate::bevy_compat::KeyboardPlugin] has been added.
+    EmitBevy,
+    /// Run after all input events are emitted.
     Post,
 }
 
@@ -56,8 +61,8 @@ impl Plugin for EventPlugin {
                 Update,
                 (
                     InputSet::Pre,
-                    InputSet::CrosstermEmit,
-                    InputSet::BevyEmit,
+                    InputSet::EmitCrossterm,
+                    InputSet::EmitBevy,
                     InputSet::Post,
                 )
                     .chain(),

@@ -1,3 +1,4 @@
+//! Mouse support.
 use std::io::stdout;
 
 use bevy::prelude::*;
