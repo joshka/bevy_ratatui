@@ -10,10 +10,7 @@ use bevy::{
 };
 use crossterm::event::KeyModifiers;
 
-use crate::{
-    event::{InputSet, KeyEvent},
-    kitty::KittyEnabled,
-};
+use crate::event::{InputSet, KeyEvent};
 
 /// Pass crossterm key events through to bevy's input system.
 ///
@@ -27,7 +24,12 @@ impl Plugin for KeyboardPlugin {
             // We need this plugin to submit our events.
             app.add_plugins(bevy::input::InputPlugin);
         }
-        app
+
+        if !app.is_plugin_added::<bevy::time::TimePlugin>() {
+            // We need this plugin to submit our events.
+            app.add_plugins(bevy::time::TimePlugin);
+        }
+        app.init_resource::<ReleaseKey>()
             .add_systems(Startup, setup_window)
             .add_systems(PreUpdate, send_key_events.in_set(InputSet::EmitBevy));
     }
@@ -72,38 +74,65 @@ impl LastPress {
     }
 }
 
+/// If the terminal does not support sending key release events, this plugin
+/// tries to emulate them. An event stream might look like this:
+///
+/// `Press A, Press B`
+///
+/// This plugin will emit events:
+///
+/// `Press A, Release A, Press B, (timer elapses) Release B`
+///
+/// The timer is set to one second by default but it can be overwritten.
+#[derive(Resource, Debug, Deref, DerefMut)]
+pub struct ReleaseKey(pub Timer);
+
+impl Default for ReleaseKey {
+    /// Set the release key timer for 1 second by default.
+    fn default() -> Self {
+        ReleaseKey(Timer::from_seconds(1.0, TimerMode::Once))
+    }
+}
+
+#[allow(clippy::too_many_arguments)]
 fn send_key_events(
     mut keys: EventReader<KeyEvent>,
-    kitty_enabled: Option<Res<KittyEnabled>>,
     window: Query<Entity, With<PrimaryWindow>>,
     mut modifiers: Local<Modifiers>,
     mut last_pressed: Local<LastPress>,
     mut keyboard_input: EventWriter<KeyboardInput>,
+    mut seen_key_released: Local<bool>,
+    mut timer: ResMut<ReleaseKey>,
+    time: Res<Time>,
 ) {
+    timer.tick(time.delta());
+    if keys.is_empty() && !timer.finished() {
+        return;
+    }
     let bevy_window = window.single();
     for key_event in keys.read() {
         if let Some((bevy_event, mods)) = key_event_to_bevy(key_event, bevy_window) {
-            // dbg!(mods, *modifiers);
             if mods != **modifiers {
                 let delta = mods.symmetric_difference(**modifiers);
                 for flag in delta {
                     let state = if mods.contains(flag) {
                         // This flag has been added.
-                        bevy::input::ButtonState::Pressed
+                        ButtonState::Pressed
                     } else {
-                        // modifiers.contains(flag)
                         // This flag has been removed.
-                        bevy::input::ButtonState::Released
+                        *seen_key_released = true;
+                        ButtonState::Released
                     };
-                    keyboard_input.send(modifier_to_bevy(
-                        crossterm_modifier_to_bevy_key(flag),
-                        state,
-                        bevy_window,
-                    ));
+                    let modifier_event =
+                        modifier_to_bevy(crossterm_modifier_to_bevy_key(flag), state, bevy_window);
+                    if !*seen_key_released {
+                        last_pressed.1.insert(KeyInput(modifier_event.clone()));
+                    }
+                    keyboard_input.send(modifier_event);
                 }
                 **modifiers = mods;
             }
-            if kitty_enabled.is_none() {
+            if !*seen_key_released {
                 // Must send the release events ourselves.
                 let wrapped = KeyInput(bevy_event.clone());
                 if let Some(last_press) = last_pressed.0.take(&wrapped) {
@@ -125,6 +154,7 @@ fn send_key_events(
         });
     }
     last_pressed.swap();
+    timer.reset();
 }
 
 /// This is a dummy window to satisfy the [KeyboardInput] struct.
@@ -132,10 +162,10 @@ fn setup_window(
     mut commands: Commands,
     // mut window_created: EventWriter<WindowCreated>
 ) {
-    // Insert our window entity so that other parts of our app can use them
+    // Insert our window entity so that other parts of our app can use them.
     let _bevy_window = commands.spawn(PrimaryWindow).id();
 
-    // Publish to the app that a terminal window has been created
+    // Publish to the app that a terminal window has been created.
     // window_created.send(WindowCreated {
     //     window: bevy_window,
     // });
