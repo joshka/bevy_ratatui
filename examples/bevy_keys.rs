@@ -23,7 +23,6 @@ fn main() {
                 bevy_keypresses,
             ),
         )
-        // .add_systems(PreUpdate, (keyboard_input_system, bevy_keyboard_input_system))
         .add_systems(Update, draw_scene_system.pipe(exit_on_error))
         .run();
 }
@@ -78,7 +77,7 @@ fn draw_scene_system(
             text.push_line("");
             for key_press in &key_presses.0 {
                 let code_string = format!("{:?}", key_press);
-                text.push_line(format!("bevy {code_string} key was repeated!"));
+                text.push_line(format!("bevy {code_string} key is pressed!"));
             }
         }
 

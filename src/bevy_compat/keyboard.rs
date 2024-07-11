@@ -23,7 +23,11 @@ pub struct KeyboardPlugin;
 
 impl Plugin for KeyboardPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(bevy::input::InputPlugin)
+        if !app.is_plugin_added::<bevy::input::InputPlugin>() {
+            // We need this plugin to submit our events.
+            app.add_plugins(bevy::input::InputPlugin);
+        }
+        app
             .add_systems(Startup, setup_window)
             .add_systems(PreUpdate, send_key_events.in_set(InputSet::EmitBevy));
     }
@@ -39,7 +43,7 @@ impl Default for Modifiers {
 }
 
 // I wish KeyboardInput had the Hash derive.
-// TODO: Drop this if KeyboardInput get a Hash impl.
+// TODO: Drop this if KeyboardInput gets a Hash impl.
 #[derive(Deref, DerefMut, PartialEq, Eq)]
 struct KeyInput(KeyboardInput);
 
