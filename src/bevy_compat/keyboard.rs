@@ -17,11 +17,10 @@
 //! ```no_run
 //! # use bevy::prelude::*;
 //! # use bevy_ratatui::*;
-//! App::new()
-//!     .add_plugins(RatatuiPlugins {
-//!         enable_input_forwarding: true,
-//!         ..default()
-//!     });
+//! App::new().add_plugins(RatatuiPlugins {
+//!     enable_input_forwarding: true,
+//!     ..default()
+//! });
 //! ```
 //!
 //! # Example
@@ -32,7 +31,8 @@
 //! addition `bevy_keys` will show what capabilities have been detected and what
 //! emulation is being used. This binary can be instructive in determining what
 //! capabilities a terminal is setup to provide. (Some terminals require
-//! enabling the kitty protocol.)
+//! enabling the kitty protocol and some terminals only support part of the
+//! protocol.)
 //!
 //! # Configuration
 //!
@@ -125,8 +125,8 @@ bitflags::bitflags! {
 
 /// Keyboard emulation policy
 ///
-/// - The [Automatic][EmulationPolicy::Automatic] policy will emulate key release or modifiers if they have
-///   not been detected.
+/// - The [Automatic][EmulationPolicy::Automatic] policy will emulate key release or modifiers if
+///   they have not been detected.
 ///
 /// - The [Manual][EmulationPolicy::Manual] policy defines whether modifiers or key releases will be
 ///   emulated.
@@ -175,7 +175,10 @@ impl Plugin for KeyboardPlugin {
             .init_resource::<Detected>()
             .init_resource::<EmulationPolicy>()
             .add_systems(Startup, setup_window)
-            .add_systems(PreUpdate, send_key_events_with_emulation.in_set(InputSet::EmitBevy));
+            .add_systems(
+                PreUpdate,
+                send_key_events_with_emulation.in_set(InputSet::EmitBevy),
+            );
     }
 }
 
@@ -323,7 +326,11 @@ fn send_key_events_with_emulation(
         });
     }
 
-    if timer.finished() && policy.emulate_what(&detected).contains(Capability::MODIFIER) {
+    if timer.finished()
+        && policy
+            .emulate_what(&detected)
+            .contains(Capability::MODIFIER)
+    {
         // Release the modifiers too if we've timed out.
         for flag in **modifiers {
             let state = ButtonState::Released;
@@ -348,7 +355,8 @@ fn send_key_events_no_emulation(
 ) {
     let bevy_window = window.single();
     for key_event in keys.read() {
-        if let Some((bevy_event, _modifiers, _repeated)) = key_event_to_bevy(key_event, bevy_window) {
+        if let Some((bevy_event, _modifiers, _repeated)) = key_event_to_bevy(key_event, bevy_window)
+        {
             keyboard_input.send(bevy_event);
         }
     }
@@ -404,7 +412,7 @@ fn key_event_to_bevy(
         crossterm::event::KeyEventKind::Repeat => {
             repeated = true;
             bevy::input::ButtonState::Released
-        },
+        }
         crossterm::event::KeyEventKind::Release => bevy::input::ButtonState::Released,
     };
     let key_code = to_bevy_keycode(code);
@@ -420,7 +428,7 @@ fn key_event_to_bevy(
                     logical_key,
                 },
                 *modifiers | mods,
-                repeated
+                repeated,
             )
         })
 }

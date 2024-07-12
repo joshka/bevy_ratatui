@@ -4,8 +4,12 @@ use bevy::{
     prelude::*,
 };
 use bevy_ratatui::{
-    error::exit_on_error, event::KeyEvent, kitty::KittyEnabled, terminal::RatatuiContext,
-    RatatuiPlugins, bevy_compat::keyboard::{Capability, Detected, EmulationPolicy}
+    bevy_compat::keyboard::{Capability, Detected, EmulationPolicy},
+    error::exit_on_error,
+    event::KeyEvent,
+    kitty::KittyEnabled,
+    terminal::RatatuiContext,
+    RatatuiPlugins,
 };
 use crossterm::event::KeyEventKind;
 use ratatui::text::Text;
