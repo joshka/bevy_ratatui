@@ -37,7 +37,7 @@ pub enum InputSet {
     Pre,
     /// Emit the crossterm events.
     EmitCrossterm,
-    /// Emit the bevy events if [crate::bevy_compat::KeyboardPlugin] has been added.
+    /// Emit the bevy events if [crate::bevy_compat::keyboard::KeyboardPlugin] has been added.
     EmitBevy,
     /// Run after all input events are emitted.
     Post,
