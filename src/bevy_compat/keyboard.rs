@@ -193,7 +193,9 @@ impl Default for Modifiers {
 }
 
 // I wish KeyboardInput had the Hash derive.
+//
 // TODO: Drop this if KeyboardInput gets a Hash impl.
+// [PR](https://github.com/bevyengine/bevy/pull/14263)
 #[derive(Deref, DerefMut, PartialEq, Eq)]
 struct KeyInput(KeyboardInput);
 
@@ -262,11 +264,17 @@ fn send_key_events_with_emulation(
     time: Res<Time>,
     mut detected: ResMut<Detected>,
     policy: Res<EmulationPolicy>,
+    backlog: Local<Vec<KeyboardInput>>,
 ) {
+    if policy.emulate_what(&detected).is_empty() {
+        send_key_events_no_emulation(keys, window, keyboard_input, backlog);
+        return;
+    }
     timer.tick(time.delta());
     if keys.is_empty() && !timer.finished() {
         return;
     }
+
     let bevy_window = window.single();
     for key_event in keys.read() {
         if matches!(key_event.code, crossterm::event::KeyCode::Modifier(_)) {
@@ -352,11 +360,21 @@ fn send_key_events_no_emulation(
     mut keys: EventReader<KeyEvent>,
     window: Query<Entity, With<PrimaryWindow>>,
     mut keyboard_input: EventWriter<KeyboardInput>,
+    mut backlog: Local<Vec<KeyboardInput>>,
 ) {
+    for bevy_event in backlog.drain(..) {
+        keyboard_input.send(bevy_event);
+    }
     let bevy_window = window.single();
     for key_event in keys.read() {
-        if let Some((bevy_event, _modifiers, _repeated)) = key_event_to_bevy(key_event, bevy_window)
+        if let Some((bevy_event, _modifiers, repeated)) = key_event_to_bevy(key_event, bevy_window)
         {
+            if repeated {
+                backlog.push(KeyboardInput {
+                    state: ButtonState::Pressed,
+                    ..bevy_event.clone()
+                });
+            }
             keyboard_input.send(bevy_event);
         }
     }
