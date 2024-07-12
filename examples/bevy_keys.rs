@@ -5,7 +5,7 @@ use bevy::{
 };
 use bevy_ratatui::{
     error::exit_on_error, event::KeyEvent, kitty::KittyEnabled, terminal::RatatuiContext,
-    RatatuiPlugins,
+    RatatuiPlugins, bevy_compat::keyboard::{Capability, Detected, EmulationPolicy}
 };
 use crossterm::event::KeyEventKind;
 use ratatui::text::Text;
@@ -13,7 +13,10 @@ use ratatui::text::Text;
 fn main() {
     let wait_duration = std::time::Duration::from_secs_f64(1. / 60.); // 60 FPS
     App::new()
-        .add_plugins(RatatuiPlugins::default())
+        .add_plugins(RatatuiPlugins {
+            enable_input_forwarding: true,
+            ..default()
+        })
         .add_plugins(ScheduleRunnerPlugin::run_loop(wait_duration))
         .add_systems(
             PreUpdate,
@@ -42,12 +45,27 @@ fn draw_scene_system(
     last_keypress: Option<Res<LastKeypress>>,
     last_bevy_keypress: Option<Res<LastBevyKeypress>>,
     bevy_keypresses: Option<Res<BevyKeypresses>>,
+    detected: Res<Detected>,
+    policy: Res<EmulationPolicy>,
 ) -> color_eyre::Result<()> {
     context.draw(|frame| {
         let mut text = Text::raw(if kitty_enabled.is_some() {
             "Kitty protocol enabled!"
         } else {
             "Kitty protocol not supported in this terminal."
+        });
+
+        text.push_line(match detected.0 {
+            Capability::ALL => "Detected modifiers and key release.",
+            Capability::KEY_RELEASE => "Detected key release but not modifiers.",
+            Capability::MODIFIER => "Detected modifiers but not key release.",
+            _ => "Did not detect modifiers or key release.",
+        });
+        text.push_line(match policy.emulate_what(&detected) {
+            Capability::ALL => "Emulate modifiers and key release.",
+            Capability::KEY_RELEASE => "Emulate key release.",
+            Capability::MODIFIER => "Emulate modifiers.",
+            _ => "Do not emulate modifiers or key release.",
         });
 
         text.push_line("Press any key. Press 'q' to Quit.");

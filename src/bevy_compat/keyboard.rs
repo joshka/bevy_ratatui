@@ -12,6 +12,49 @@ use crossterm::event::KeyModifiers;
 
 use crate::event::{InputSet, KeyEvent};
 
+bitflags::bitflags! {
+    /// Crudely defines some capabilities of terminal. Useful for representing
+    /// both detection ([Detect]) and emulation ([EmulationPolicy]).
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+    pub struct Capability: u8 {
+        const KEY_RELEASE = 0b0000_0001;
+        const MODIFIER = 0b0000_0010;
+        const ALL = Self::KEY_RELEASE.bits() | Self::MODIFIER.bits();
+    }
+}
+
+/// Keyboard emulation policy
+///
+/// - The [Automatic] policy will emulate key release or modifiers if they have
+///   not been detected.
+///
+/// - The [Manual] policy defines whether modifiers or key releases will be
+///   emulated.
+///
+/// Note: If key releases are emulated and key releases are provided by the
+/// terminal, dupliate events may be sent.
+#[derive(Debug, Default, Resource)]
+pub enum EmulationPolicy {
+    /// Emulate everything that has not been detected.
+    #[default]
+    Automatic,
+    /// Define what will be emulated.
+    Manual(Capability),
+}
+
+impl EmulationPolicy {
+    /// Return what capabilities to emulate.
+    pub fn emulate_what(&self, detected: &Detected) -> Capability {
+        match self {
+            EmulationPolicy::Automatic => !detected.0,
+            EmulationPolicy::Manual(k) => *k,
+        }
+    }
+}
+
+#[derive(Debug, Resource, Default)]
+pub struct Detected(pub Capability);
+
 /// Pass crossterm key events through to bevy's input system.
 ///
 /// You can use bevy's regular `ButtonInput<KeyCode>` or bevy_ratatui's
@@ -24,17 +67,19 @@ impl Plugin for KeyboardPlugin {
             // We need this plugin to submit our events.
             app.add_plugins(bevy::input::InputPlugin);
         }
-
         if !app.is_plugin_added::<bevy::time::TimePlugin>() {
-            // We need this plugin to submit our events.
+            // We need this plugin for the delay timer.
             app.add_plugins(bevy::time::TimePlugin);
         }
         app.init_resource::<ReleaseKey>()
+            .init_resource::<Detected>()
+            .init_resource::<EmulationPolicy>()
             .add_systems(Startup, setup_window)
-            .add_systems(PreUpdate, send_key_events.in_set(InputSet::EmitBevy));
+            .add_systems(PreUpdate, send_key_events_with_emulation.in_set(InputSet::EmitBevy));
     }
 }
 
+/// A new type so we can implement Default and use with `Local`.
 #[derive(Debug, Deref, DerefMut)]
 struct Modifiers(KeyModifiers);
 
@@ -65,6 +110,8 @@ impl Hash for KeyInput {
 ///
 /// - `.0` is current frame's last keys pressed.
 /// - `.1` is the next frame's last keys pressed.
+///
+/// During processing we read from `.0` and write to `.1`.
 #[derive(Default)]
 struct LastPress(HashSet<KeyInput>, HashSet<KeyInput>);
 
@@ -95,15 +142,16 @@ impl Default for ReleaseKey {
 }
 
 #[allow(clippy::too_many_arguments)]
-fn send_key_events(
+fn send_key_events_with_emulation(
     mut keys: EventReader<KeyEvent>,
     window: Query<Entity, With<PrimaryWindow>>,
     mut modifiers: Local<Modifiers>,
     mut last_pressed: Local<LastPress>,
     mut keyboard_input: EventWriter<KeyboardInput>,
-    mut seen_key_released: Local<bool>,
     mut timer: ResMut<ReleaseKey>,
     time: Res<Time>,
+    mut detected: ResMut<Detected>,
+    policy: Res<EmulationPolicy>,
 ) {
     timer.tick(time.delta());
     if keys.is_empty() && !timer.finished() {
@@ -111,8 +159,16 @@ fn send_key_events(
     }
     let bevy_window = window.single();
     for key_event in keys.read() {
-        if let Some((bevy_event, mods)) = key_event_to_bevy(key_event, bevy_window) {
-            if mods != **modifiers {
+        if matches!(key_event.code, crossterm::event::KeyCode::Modifier(_)) {
+            detected.0 |= Capability::MODIFIER;
+        }
+
+        if let Some((bevy_event, mods, repeated)) = key_event_to_bevy(key_event, bevy_window) {
+            if bevy_event.state == ButtonState::Released {
+                detected.0 |= Capability::KEY_RELEASE;
+            }
+            let emulation = policy.emulate_what(&detected);
+            if emulation.contains(Capability::MODIFIER) && mods != **modifiers {
                 let delta = mods.symmetric_difference(**modifiers);
                 for flag in delta {
                     let state = if mods.contains(flag) {
@@ -120,19 +176,23 @@ fn send_key_events(
                         ButtonState::Pressed
                     } else {
                         // This flag has been removed.
-                        *seen_key_released = true;
                         ButtonState::Released
                     };
                     let modifier_event =
                         modifier_to_bevy(crossterm_modifier_to_bevy_key(flag), state, bevy_window);
-                    if !*seen_key_released {
-                        last_pressed.1.insert(KeyInput(modifier_event.clone()));
-                    }
+                    // last_pressed.1.insert(KeyInput(modifier_event.clone()));
                     keyboard_input.send(modifier_event);
                 }
                 **modifiers = mods;
             }
-            if !*seen_key_released {
+
+            if repeated {
+                // Repeated key events are converted to key release events by
+                // `key_event_to_bevy()`. Queue it up to emit a key press on the
+                // next frame.
+                last_pressed.1.insert(KeyInput(bevy_event.clone()));
+            }
+            if emulation.contains(Capability::KEY_RELEASE) {
                 // Must send the release events ourselves.
                 let wrapped = KeyInput(bevy_event.clone());
                 if let Some(last_press) = last_pressed.0.take(&wrapped) {
@@ -149,7 +209,10 @@ fn send_key_events(
     }
     for e in last_pressed.0.drain() {
         keyboard_input.send(KeyboardInput {
-            state: ButtonState::Released,
+            state: match e.0.state {
+                ButtonState::Pressed => ButtonState::Released,
+                ButtonState::Released => ButtonState::Pressed,
+            },
             ..e.0
         });
     }
@@ -157,18 +220,27 @@ fn send_key_events(
     timer.reset();
 }
 
-/// This is a dummy window to satisfy the [KeyboardInput] struct.
-fn setup_window(
-    mut commands: Commands,
-    // mut window_created: EventWriter<WindowCreated>
+/// Send bevy events without any emulation. This merely shows how simple life is
+/// when emulation is not involved. However, it doesn't handle repeated keys
+/// though.
+#[allow(dead_code)]
+fn send_key_events_no_emulation(
+    mut keys: EventReader<KeyEvent>,
+    window: Query<Entity, With<PrimaryWindow>>,
+    mut keyboard_input: EventWriter<KeyboardInput>,
 ) {
+    let bevy_window = window.single();
+    for key_event in keys.read() {
+        if let Some((bevy_event, _modifiers, _repeated)) = key_event_to_bevy(key_event, bevy_window) {
+            keyboard_input.send(bevy_event);
+        }
+    }
+}
+
+/// This is a dummy window to satisfy the [KeyboardInput] struct.
+fn setup_window(mut commands: Commands) {
     // Insert our window entity so that other parts of our app can use them.
     let _bevy_window = commands.spawn(PrimaryWindow).id();
-
-    // Publish to the app that a terminal window has been created.
-    // window_created.send(WindowCreated {
-    //     window: bevy_window,
-    // });
 }
 
 fn modifier_to_bevy(
@@ -201,6 +273,7 @@ fn key_event_to_bevy(
 ) -> Option<(
     bevy::input::keyboard::KeyboardInput,
     crossterm::event::KeyModifiers,
+    bool,
 )> {
     let crossterm::event::KeyEvent {
         code,
@@ -208,9 +281,13 @@ fn key_event_to_bevy(
         kind,
         state: _state,
     } = key_event;
+    let mut repeated = false;
     let state = match kind {
         crossterm::event::KeyEventKind::Press => bevy::input::ButtonState::Pressed,
-        crossterm::event::KeyEventKind::Repeat => bevy::input::ButtonState::Pressed,
+        crossterm::event::KeyEventKind::Repeat => {
+            repeated = true;
+            bevy::input::ButtonState::Released
+        },
         crossterm::event::KeyEventKind::Release => bevy::input::ButtonState::Released,
     };
     let key_code = to_bevy_keycode(code);
@@ -226,6 +303,7 @@ fn key_event_to_bevy(
                     logical_key,
                 },
                 *modifiers | mods,
+                repeated
             )
         })
 }

@@ -15,6 +15,7 @@ use crate::{bevy_compat, error, event, kitty, mouse, terminal};
 pub struct RatatuiPlugins {
     pub enable_kitty_protocol: bool,
     pub enable_mouse_capture: bool,
+    pub enable_input_forwarding: bool,
 }
 
 impl Default for RatatuiPlugins {
@@ -22,6 +23,7 @@ impl Default for RatatuiPlugins {
         Self {
             enable_kitty_protocol: true,
             enable_mouse_capture: false,
+            enable_input_forwarding: false,
         }
     }
 }
@@ -41,13 +43,15 @@ impl PluginGroup for RatatuiPlugins {
         let mut builder = PluginGroupBuilder::start::<Self>()
             .add(error::ErrorPlugin)
             .add(terminal::TerminalPlugin)
-            .add(event::EventPlugin)
-            .add(bevy_compat::KeyboardPlugin);
+            .add(event::EventPlugin);
         if self.enable_kitty_protocol {
             builder = builder.add(kitty::KittyPlugin);
         }
         if self.enable_mouse_capture {
             builder = builder.add(mouse::MousePlugin);
+        }
+        if self.enable_input_forwarding {
+            builder = builder.add(bevy_compat::keyboard::KeyboardPlugin);
         }
         builder
     }
