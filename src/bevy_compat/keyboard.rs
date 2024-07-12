@@ -180,7 +180,6 @@ fn send_key_events_with_emulation(
                     };
                     let modifier_event =
                         modifier_to_bevy(crossterm_modifier_to_bevy_key(flag), state, bevy_window);
-                    // last_pressed.1.insert(KeyInput(modifier_event.clone()));
                     keyboard_input.send(modifier_event);
                 }
                 **modifiers = mods;
@@ -215,6 +214,17 @@ fn send_key_events_with_emulation(
             },
             ..e.0
         });
+    }
+
+    if timer.finished() && policy.emulate_what(&detected).contains(Capability::MODIFIER) {
+        // Release the modifiers too if we've timed out.
+        for flag in **modifiers {
+            let state = ButtonState::Released;
+            let modifier_event =
+                modifier_to_bevy(crossterm_modifier_to_bevy_key(flag), state, bevy_window);
+            keyboard_input.send(modifier_event);
+        }
+        **modifiers = KeyModifiers::empty();
     }
     last_pressed.swap();
     timer.reset();
