@@ -1,6 +1,6 @@
 use bevy::{app::PluginGroupBuilder, prelude::*};
 
-use crate::{bevy_compat, error, event, kitty, mouse, terminal};
+use crate::{input_forwarding, error, event, kitty, mouse, terminal};
 
 /// A plugin group that includes all the plugins in the Ratatui crate.
 ///
@@ -54,7 +54,7 @@ impl PluginGroup for RatatuiPlugins {
             builder = builder.add(mouse::MousePlugin);
         }
         if self.enable_input_forwarding {
-            builder = builder.add(bevy_compat::keyboard::KeyboardPlugin);
+            builder = builder.add(input_forwarding::KeyboardPlugin);
         }
         builder
     }

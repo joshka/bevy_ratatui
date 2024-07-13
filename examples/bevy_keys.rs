@@ -4,7 +4,7 @@ use bevy::{
     prelude::*,
 };
 use bevy_ratatui::{
-    bevy_compat::keyboard::{Capability, Detected, EmulationPolicy, ReleaseKey, Emulate},
+    input_forwarding::{Capability, Detected, EmulationPolicy, ReleaseKey, Emulate},
     error::exit_on_error,
     event::KeyEvent,
     kitty::KittyEnabled,
