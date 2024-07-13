@@ -13,8 +13,11 @@ use crate::{bevy_compat, error, event, kitty, mouse, terminal};
 /// App::new().add_plugins(RatatuiPlugins::default());
 /// ```
 pub struct RatatuiPlugins {
+    /// Use kitty protocol if available and enabled.
     pub enable_kitty_protocol: bool,
+    /// Capture mouse if enabled.
     pub enable_mouse_capture: bool,
+    /// Forwards terminal input events to bevy's input system if enabled.
     pub enable_input_forwarding: bool,
 }
 

@@ -4,7 +4,7 @@ use bevy::{
     prelude::*,
 };
 use bevy_ratatui::{
-    bevy_compat::keyboard::{Capability, Detected, EmulationPolicy},
+    bevy_compat::keyboard::{Capability, Detected, EmulationPolicy, ReleaseKey},
     error::exit_on_error,
     event::KeyEvent,
     kitty::KittyEnabled,
@@ -31,6 +31,7 @@ fn main() {
             ),
         )
         .add_systems(Update, draw_scene_system.pipe(exit_on_error))
+        .add_systems(Update, hotkeys)
         .run();
 }
 
@@ -50,6 +51,7 @@ fn draw_scene_system(
     last_bevy_keypress: Option<Res<LastBevyKeypress>>,
     bevy_keypresses: Option<Res<BevyKeypresses>>,
     detected: Res<Detected>,
+    release_key: Res<ReleaseKey>,
     policy: Res<EmulationPolicy>,
 ) -> color_eyre::Result<()> {
     context.draw(|frame| {
@@ -71,6 +73,7 @@ fn draw_scene_system(
             Capability::MODIFIER => "Emulate modifiers.",
             _ => "Do not emulate modifiers or key release.",
         });
+        text.push_line(format!("Press 'r' to cycle release key policy, currently {:?}", release_key));
 
         text.push_line("Press any key. Press 'q' to Quit.");
 
@@ -108,21 +111,31 @@ fn draw_scene_system(
     Ok(())
 }
 
+fn hotkeys(
+    input: Res<ButtonInput<KeyCode>>,
+    mut exit: EventWriter<AppExit>,
+    mut release_key: ResMut<ReleaseKey>
+) {
+    use bevy::input::keyboard::KeyCode::*;
+    if input.just_pressed(KeyQ) | input.just_pressed(Escape) {
+        exit.send_default();
+    } else if input.just_pressed(KeyR) {
+        use ReleaseKey::*;
+        *release_key = match *release_key {
+            OnNextKey => FrameCount(60),
+            FrameCount(_) => Duration(std::time::Duration::from_secs(2)),
+            Duration(_) => Immediate,
+            Immediate => OnNextKey
+        };
+    }
+}
+
 fn keyboard_input_system(
     mut events: EventReader<KeyEvent>,
-    mut exit: EventWriter<AppExit>,
     mut commands: Commands,
 ) {
-    use crossterm::event::KeyCode;
     for event in events.read() {
-        match event.code {
-            KeyCode::Char('q') | KeyCode::Esc => {
-                exit.send_default();
-            }
-            _ => {
-                commands.insert_resource(LastKeypress(event.clone()));
-            }
-        }
+        commands.insert_resource(LastKeypress(event.clone()));
     }
 }
 
