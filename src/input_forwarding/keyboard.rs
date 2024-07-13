@@ -105,7 +105,7 @@
 use std::{
     collections::HashSet,
     hash::{Hash, Hasher},
-    time::Duration
+    time::Duration,
 };
 
 use bevy::{
@@ -133,10 +133,10 @@ bitflags::bitflags! {
 /// Keyboard emulation policy
 ///
 /// - The [Automatic][EmulationPolicy::Automatic] policy will emulate key
-/// release or modifiers if they have not been detected.
+///   release or modifiers if they have not been detected.
 ///
 /// - The [Manual][EmulationPolicy::Manual] policy defines whether modifiers or
-/// key releases will be emulated.
+///   key releases will be emulated.
 ///
 /// Note: If key releases are emulated and key releases are provided by the
 /// terminal, dupliate events may be sent.
@@ -172,8 +172,8 @@ impl EmulationPolicy {
 #[derive(Debug, Resource, Default, Deref)]
 pub struct Detected(pub Capability);
 
-/// Pass crossterm key events through to bevy's input system. See [keyboard][crate::bevy_compat::keyboard] for
-/// more details.
+/// Pass crossterm key events through to bevy's input system. See
+/// [keyboard][crate::bevy_compat::keyboard] for more details.
 pub struct KeyboardPlugin;
 
 impl Plugin for KeyboardPlugin {
@@ -193,17 +193,25 @@ impl Plugin for KeyboardPlugin {
             .add_systems(Startup, setup_window)
             .add_systems(
                 PreUpdate,
-                 reset_emulation_check.run_if(resource_changed::<EmulationPolicy>).in_set(InputSet::Pre))
+                reset_emulation_check
+                    .run_if(resource_changed::<EmulationPolicy>)
+                    .in_set(InputSet::Pre),
+            )
             .add_systems(
                 PreUpdate,
-                (detect_capabilities,
-                 check_for_emulation)
-                  .chain().run_if(resource_exists::<Emulate>).in_set(InputSet::CheckEmulation))
+                (detect_capabilities, check_for_emulation)
+                    .chain()
+                    .run_if(resource_exists::<Emulate>)
+                    .in_set(InputSet::CheckEmulation),
+            )
             .add_systems(
                 PreUpdate,
-                (send_key_events_with_emulation.run_if(resource_exists::<Emulate>),
-                 send_key_events_no_emulation.run_if(not(resource_exists::<Emulate>)))
-                 .in_set(InputSet::EmitBevy));
+                (
+                    send_key_events_with_emulation.run_if(resource_exists::<Emulate>),
+                    send_key_events_no_emulation.run_if(not(resource_exists::<Emulate>)),
+                )
+                    .in_set(InputSet::EmitBevy),
+            );
     }
 }
 
@@ -321,17 +329,21 @@ impl ReleaseKey {
     fn tick(&self, state: &mut ReleaseKeyState, delta: Duration) {
         use ReleaseKey::*;
         match self {
-            FrameCount(_) | Immediate => if let ReleaseKeyState::Count(ref mut c) = state {
-                *c = c.saturating_add(1);
-            } else {
-                *state = ReleaseKeyState::Count(0);
+            FrameCount(_) | Immediate => {
+                if let ReleaseKeyState::Count(ref mut c) = state {
+                    *c = c.saturating_add(1);
+                } else {
+                    *state = ReleaseKeyState::Count(0);
+                }
             }
-            Duration(d) => if let ReleaseKeyState::Timer(ref mut timer) = state {
-                timer.tick(delta);
-            } else {
-                *state = ReleaseKeyState::Timer(Timer::new(*d, TimerMode::Once));
+            Duration(d) => {
+                if let ReleaseKeyState::Timer(ref mut timer) = state {
+                    timer.tick(delta);
+                } else {
+                    *state = ReleaseKeyState::Timer(Timer::new(*d, TimerMode::Once));
+                }
             }
-            _ => ()
+            _ => (),
         }
     }
 
@@ -340,14 +352,18 @@ impl ReleaseKey {
         match self {
             OnNextKey => false,
             FrameCount(target) => {
-                let ReleaseKeyState::Count(ref count) = state else { return false; };
+                let ReleaseKeyState::Count(ref count) = state else {
+                    return false;
+                };
                 count >= target
-            },
+            }
             Duration(_) => {
-                let ReleaseKeyState::Timer(ref timer) = state else { return false; };
+                let ReleaseKeyState::Timer(ref timer) = state else {
+                    return false;
+                };
                 timer.finished()
             }
-            Immediate => true
+            Immediate => true,
         }
     }
 
@@ -355,21 +371,20 @@ impl ReleaseKey {
         use ReleaseKey::*;
         match self {
             FrameCount(_) | Immediate => *state = ReleaseKeyState::Count(0),
-            Duration(d) => if let ReleaseKeyState::Timer(ref mut timer) = state {
-                timer.reset();
-            } else {
-                *state = ReleaseKeyState::Timer(Timer::new(*d, TimerMode::Once));
+            Duration(d) => {
+                if let ReleaseKeyState::Timer(ref mut timer) = state {
+                    timer.reset();
+                } else {
+                    *state = ReleaseKeyState::Timer(Timer::new(*d, TimerMode::Once));
+                }
             }
-            _ => ()
+            _ => (),
         }
     }
 }
 
 #[allow(clippy::too_many_arguments)]
-fn detect_capabilities(
-    mut keys: EventReader<KeyEvent>,
-    mut detected: ResMut<Detected>,
-) {
+fn detect_capabilities(mut keys: EventReader<KeyEvent>, mut detected: ResMut<Detected>) {
     for key_event in keys.read() {
         if matches!(key_event.code, crossterm::event::KeyCode::Modifier(_)) {
             detected.0 |= Capability::MODIFIER;
@@ -506,7 +521,8 @@ fn send_key_events_no_emulation(
     }
     let bevy_window = window.single();
     for key_event in keys.read() {
-        if let Some((bevy_event, _modifiers, repeated)) = key_event_to_bevy(key_event, bevy_window) {
+        if let Some((bevy_event, _modifiers, repeated)) = key_event_to_bevy(key_event, bevy_window)
+        {
             if repeated {
                 key_repeat_queue.push(KeyboardInput {
                     state: ButtonState::Pressed,
@@ -616,7 +632,7 @@ fn to_bevy_keycode(
         c::BackTab => {
             mods |= m::SHIFT;
             Some(b::Tab)
-        },
+        }
         c::Delete => Some(b::Delete),
         c::Insert => Some(b::Insert),
         c::F(f) => match f {
@@ -943,7 +959,7 @@ fn to_bevy_key(key_code: &crossterm::event::KeyCode) -> Option<bevy::input::keyb
         c::BackTab => {
             // mods |= m::SHIFT;
             Some(b::Tab)
-        },
+        }
         c::Delete => Some(b::Delete),
         c::Insert => Some(b::Insert),
         c::F(f) => match f {

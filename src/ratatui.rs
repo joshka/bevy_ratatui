@@ -1,6 +1,6 @@
 use bevy::{app::PluginGroupBuilder, prelude::*};
 
-use crate::{input_forwarding, error, event, kitty, mouse, terminal};
+use crate::{error, event, input_forwarding, kitty, mouse, terminal};
 
 /// A plugin group that includes all the plugins in the Ratatui crate.
 ///

@@ -4,9 +4,9 @@ use bevy::{
     prelude::*,
 };
 use bevy_ratatui::{
-    input_forwarding::{Capability, Detected, EmulationPolicy, ReleaseKey, Emulate},
     error::exit_on_error,
     event::KeyEvent,
+    input_forwarding::{Capability, Detected, Emulate, EmulationPolicy, ReleaseKey},
     kitty::KittyEnabled,
     terminal::RatatuiContext,
     RatatuiPlugins,
@@ -79,7 +79,10 @@ fn draw_scene_system(
         } else {
             "Emulate marker is not present."
         });
-        text.push_line(format!("Press 'r' to cycle release key policy, currently {:?}", release_key));
+        text.push_line(format!(
+            "Press 'r' to cycle release key policy, currently {:?}",
+            release_key
+        ));
 
         text.push_line("Press any key. Press 'q' to Quit.");
 
@@ -121,7 +124,7 @@ fn hotkeys(
     input: Res<ButtonInput<KeyCode>>,
     mut exit: EventWriter<AppExit>,
     mut release_key: ResMut<ReleaseKey>,
-    mut policy: ResMut<EmulationPolicy>
+    mut policy: ResMut<EmulationPolicy>,
 ) {
     use bevy::input::keyboard::KeyCode::*;
     if input.just_pressed(KeyQ) | input.just_pressed(Escape) {
@@ -132,7 +135,7 @@ fn hotkeys(
             OnNextKey => FrameCount(60),
             FrameCount(_) => Duration(std::time::Duration::from_secs(2)),
             Duration(_) => Immediate,
-            Immediate => OnNextKey
+            Immediate => OnNextKey,
         };
     } else if input.just_pressed(KeyP) {
         // Mutate the policy to ensure that the Emulate marker is removed
@@ -141,10 +144,7 @@ fn hotkeys(
     }
 }
 
-fn keyboard_input_system(
-    mut events: EventReader<KeyEvent>,
-    mut commands: Commands,
-) {
+fn keyboard_input_system(mut events: EventReader<KeyEvent>, mut commands: Commands) {
     for event in events.read() {
         commands.insert_resource(LastKeypress(event.clone()));
     }
