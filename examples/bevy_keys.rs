@@ -4,7 +4,7 @@ use bevy::{
     prelude::*,
 };
 use bevy_ratatui::{
-    bevy_compat::keyboard::{Capability, Detected, EmulationPolicy, ReleaseKey},
+    bevy_compat::keyboard::{Capability, Detected, EmulationPolicy, ReleaseKey, Emulate},
     error::exit_on_error,
     event::KeyEvent,
     kitty::KittyEnabled,
@@ -50,6 +50,7 @@ fn draw_scene_system(
     last_keypress: Option<Res<LastKeypress>>,
     last_bevy_keypress: Option<Res<LastBevyKeypress>>,
     bevy_keypresses: Option<Res<BevyKeypresses>>,
+    emulate: Option<Res<Emulate>>,
     detected: Res<Detected>,
     release_key: Res<ReleaseKey>,
     policy: Res<EmulationPolicy>,
@@ -67,11 +68,16 @@ fn draw_scene_system(
             Capability::MODIFIER => "Detected modifiers but not key release.",
             _ => "Did not detect modifiers or key release.",
         });
-        text.push_line(match policy.emulate_what(&detected) {
+        text.push_line(match policy.emulate_capabilities(&detected) {
             Capability::ALL => "Emulate modifiers and key release.",
             Capability::KEY_RELEASE => "Emulate key release.",
             Capability::MODIFIER => "Emulate modifiers.",
             _ => "Do not emulate modifiers or key release.",
+        });
+        text.push_line(if emulate.is_some() {
+            "Emulate marker is present."
+        } else {
+            "Emulate marker is not present."
         });
         text.push_line(format!("Press 'r' to cycle release key policy, currently {:?}", release_key));
 
@@ -114,7 +120,8 @@ fn draw_scene_system(
 fn hotkeys(
     input: Res<ButtonInput<KeyCode>>,
     mut exit: EventWriter<AppExit>,
-    mut release_key: ResMut<ReleaseKey>
+    mut release_key: ResMut<ReleaseKey>,
+    mut policy: ResMut<EmulationPolicy>
 ) {
     use bevy::input::keyboard::KeyCode::*;
     if input.just_pressed(KeyQ) | input.just_pressed(Escape) {
@@ -127,6 +134,10 @@ fn hotkeys(
             Duration(_) => Immediate,
             Immediate => OnNextKey
         };
+    } else if input.just_pressed(KeyP) {
+        // Mutate the policy to ensure that the Emulate marker is removed
+        // (however briefly).
+        *policy = *policy;
     }
 }
 

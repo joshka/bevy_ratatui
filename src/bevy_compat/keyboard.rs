@@ -140,7 +140,7 @@ bitflags::bitflags! {
 ///
 /// Note: If key releases are emulated and key releases are provided by the
 /// terminal, dupliate events may be sent.
-#[derive(Debug, Default, Resource)]
+#[derive(Debug, Default, Resource, Clone, Copy)]
 pub enum EmulationPolicy {
     /// Emulate everything that has not been detected.
     #[default]
@@ -189,12 +189,21 @@ impl Plugin for KeyboardPlugin {
         app.init_resource::<ReleaseKey>()
             .init_resource::<Detected>()
             .init_resource::<EmulationPolicy>()
+            .init_resource::<Emulate>()
             .add_systems(Startup, setup_window)
             .add_systems(
                 PreUpdate,
+                 reset_emulation_check.run_if(resource_changed::<EmulationPolicy>).in_set(InputSet::Pre))
+            .add_systems(
+                PreUpdate,
                 (detect_capabilities,
-                send_key_events_with_emulation).chain().in_set(InputSet::EmitBevy),
-            );
+                 check_for_emulation)
+                  .chain().run_if(resource_exists::<Emulate>).in_set(InputSet::CheckEmulation))
+            .add_systems(
+                PreUpdate,
+                (send_key_events_with_emulation.run_if(resource_exists::<Emulate>),
+                 send_key_events_no_emulation.run_if(not(resource_exists::<Emulate>)))
+                 .in_set(InputSet::EmitBevy));
     }
 }
 
@@ -371,7 +380,26 @@ fn detect_capabilities(
     }
 }
 
+/// Marker resource used to determine whether this plugin will emulate any
+/// terminal capabilities. If it is not present, that's the best case because
+/// the terminal doesn't require this plugin to emulate any capabilities. It's a
+/// simpler and faster code path.
+#[derive(Debug, Resource, Default)]
+pub struct Emulate;
+
+fn check_for_emulation(
+    detected: Res<Detected>,
+    policy: Res<EmulationPolicy>,
+    mut commands: Commands,
+) {
+    if policy.emulate_capabilities(&detected).is_empty() {
+        // We don't need to emulate anything, so don't.
+        commands.remove_resource::<Emulate>();
     }
+}
+
+fn reset_emulation_check(mut commands: Commands) {
+    commands.insert_resource(Emulate);
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -384,15 +412,9 @@ fn send_key_events_with_emulation(
     release_key: Res<ReleaseKey>,
     mut release_key_state: Local<ReleaseKeyState>,
     time: Res<Time>,
-    mut detected: ResMut<Detected>,
+    detected: Res<Detected>,
     policy: Res<EmulationPolicy>,
-    key_repeat_queue: Local<Vec<KeyboardInput>>,
 ) {
-    if policy.emulate_capabilities(&detected).is_empty() {
-        // We don't need to emulate anything, so don't.
-        send_key_events_no_emulation(keys, window, keyboard_input, key_repeat_queue);
-        return;
-    }
     release_key.tick(&mut release_key_state, time.delta());
     if keys.is_empty() && !release_key.finished(&release_key_state) {
         return;
@@ -400,14 +422,7 @@ fn send_key_events_with_emulation(
 
     let bevy_window = window.single();
     for key_event in keys.read() {
-        if matches!(key_event.code, crossterm::event::KeyCode::Modifier(_)) {
-            detected.0 |= Capability::MODIFIER;
-        }
-
         if let Some((bevy_event, mods, repeated)) = key_event_to_bevy(key_event, bevy_window) {
-            if bevy_event.state == ButtonState::Released {
-                detected.0 |= Capability::KEY_RELEASE;
-            }
             let emulation = policy.emulate_capabilities(&detected);
             if emulation.contains(Capability::MODIFIER) && mods != **modifiers {
                 let delta = mods.symmetric_difference(**modifiers);
