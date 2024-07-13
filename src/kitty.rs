@@ -1,3 +1,4 @@
+//! Enhanced kitty keyboard protocol.
 use std::io::{self, stdout};
 
 use bevy::prelude::*;

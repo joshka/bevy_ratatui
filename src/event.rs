@@ -30,6 +30,21 @@ use ratatui::layout::Size;
 
 use crate::error::exit_on_error;
 
+/// InputSet defines when the input events are emitted.
+#[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
+pub enum InputSet {
+    /// Run before any input events are emitted.
+    Pre,
+    /// Emit the crossterm events.
+    EmitCrossterm,
+    /// Check for emulation
+    CheckEmulation,
+    /// Emit the bevy events if [crate::input_forwarding::KeyboardPlugin] has been added.
+    EmitBevy,
+    /// Run after all input events are emitted.
+    Post,
+}
+
 /// A plugin for handling events.
 ///
 /// This plugin adds the `KeyEvent` event, and a system that reads events from crossterm and sends
@@ -44,7 +59,23 @@ impl Plugin for EventPlugin {
             .add_event::<ResizeEvent>()
             .add_event::<PasteEvent>()
             .add_event::<CrosstermEvent>()
-            .add_systems(PreUpdate, crossterm_event_system.pipe(exit_on_error));
+            .configure_sets(
+                Update,
+                (
+                    InputSet::Pre,
+                    InputSet::EmitCrossterm,
+                    InputSet::CheckEmulation,
+                    InputSet::EmitBevy,
+                    InputSet::Post,
+                )
+                    .chain(),
+            )
+            .add_systems(
+                PreUpdate,
+                crossterm_event_system
+                    .pipe(exit_on_error)
+                    .in_set(InputSet::EmitCrossterm),
+            );
     }
 }
 
@@ -98,6 +129,7 @@ pub fn crossterm_event_system(
                 {
                     exit.send_default();
                 }
+
                 keys.send(KeyEvent(event));
             }
             event::Event::FocusLost => {

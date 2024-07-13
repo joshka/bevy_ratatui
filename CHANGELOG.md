@@ -3,6 +3,7 @@
 All notable changes to this project will be documented in this file.
 
 ## [unreleased]
+- Pass crossterm key event to bevy key handling.
 
 ## [0.5.3](https://github.com/joshka/bevy_ratatui/compare/v0.5.2...v0.5.3) - 2024-07-05
 
@@ -22,14 +23,14 @@ All notable changes to this project will be documented in this file.
 ## [0.5.0](https://github.com/joshka/bevy_ratatui/compare/v0.4.0...v0.5.0) - 2024-06-05
 
 ### Added
-- add rest of crossterm events
+- Add rest of crossterm events.
 
 ### Other
-- Move mouse to separate plugin
-- Make kitty protocol configurable
-- added kitty protocol support. ([#5](https://github.com/joshka/bevy_ratatui/pull/5))
-- add mouse event example
-- Add more docs
+- Move mouse to separate plugin.
+- Make kitty protocol configurable.
+- Added kitty protocol support. ([#5](https://github.com/joshka/bevy_ratatui/pull/5))
+- Add mouse event example.
+- Add more docs.
 
 ## [0.4.0](https://github.com/joshka/bevy_ratatui/compare/v0.3.0...v0.4.0) - 2024-06-01
 

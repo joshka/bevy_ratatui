@@ -323,10 +323,12 @@ name = "bevy_ratatui"
 version = "0.6.0"
 dependencies = [
  "bevy",
+ "bitflags",
  "color-eyre",
  "crossterm",
  "rand",
  "ratatui",
+ "smol_str",
 ]
 
 [[package]]

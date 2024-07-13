@@ -14,9 +14,11 @@ keywords = ["cli", "ratatui", "terminal", "tui", "bevy"]
 bevy = { version = "0.14", default-features = false, features = [
     "dynamic_linking",
 ] }
+bitflags = "2.6.0"
 color-eyre = "0.6.3"
 crossterm = "0.27.0"
 ratatui = { version = "0.27.0", features = ["unstable-widget-ref"] }
+smol_str = "0.2.2"
 
 # Enable a small amount of optimization in debug mode
 [profile.dev]
