@@ -35,6 +35,8 @@ impl Plugin for TerminalPlugin {
 pub fn setup(mut commands: Commands) -> Result<()> {
     let terminal = RatatuiContext::init()?;
     commands.insert_resource(terminal);
+    // Insert our window entity so that other parts of our app can use them.
+    commands.spawn(DummyWindow);
     Ok(())
 }
 
@@ -46,6 +48,10 @@ pub fn cleanup_system(mut commands: Commands, mut exit_reader: EventReader<AppEx
         commands.remove_resource::<RatatuiContext>();
     }
 }
+
+/// This is a dummy window to satisfy the [KeyboardInput] struct.
+#[derive(Debug, Component)]
+pub struct DummyWindow;
 
 /// A wrapper around ratatui::Terminal that automatically enters and leaves the alternate screen.
 ///
