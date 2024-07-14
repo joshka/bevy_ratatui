@@ -55,7 +55,7 @@
 
 pub mod error;
 pub mod event;
-pub mod input_forwarding;
+pub mod input;
 pub mod kitty;
 pub mod mouse;
 mod ratatui;

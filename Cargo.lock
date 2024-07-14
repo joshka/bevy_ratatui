@@ -4,9 +4,9 @@ version = 3
 
 [[package]]
 name = "accesskit"
-version = "0.14.0"
+version = "0.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6cf780eb737f2d4a49ffbd512324d53ad089070f813f7be7f99dbd5123a7f448"
+checksum = "e4700bdc115b306d6c43381c344dc307f03b7f0460c304e4892c309930322bd7"
 
 [[package]]
 name = "addr2line"
@@ -99,9 +99,8 @@ dependencies = [
 
 [[package]]
 name = "bevy"
-version = "0.14.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8e938630e9f472b1899c78ef84aa907081b23bad8333140e2295c620485b6ee7"
+version = "0.15.0-dev"
+source = "git+https://github.com/shanecelis/bevy?branch=hash-keyboard-input#0c2b661ae524696f22ca08c6461f60876b4afbf7"
 dependencies = [
  "bevy_dylib",
  "bevy_internal",
@@ -109,9 +108,8 @@ dependencies = [
 
 [[package]]
 name = "bevy_a11y"
-version = "0.14.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3e613f0e7d5a92637e59744f7185e374c9a59654ecc6d7575adcec9581db1363"
+version = "0.15.0-dev"
+source = "git+https://github.com/shanecelis/bevy?branch=hash-keyboard-input#0c2b661ae524696f22ca08c6461f60876b4afbf7"
 dependencies = [
  "accesskit",
  "bevy_app",
@@ -121,9 +119,8 @@ dependencies = [
 
 [[package]]
 name = "bevy_app"
-version = "0.14.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6f548e9dab7d10c5f99e3b504c758c4bf87aa67df9bcb9cc8b317a0271770e72"
+version = "0.15.0-dev"
+source = "git+https://github.com/shanecelis/bevy?branch=hash-keyboard-input#0c2b661ae524696f22ca08c6461f60876b4afbf7"
 dependencies = [
  "bevy_derive",
  "bevy_ecs",
@@ -131,6 +128,7 @@ dependencies = [
  "bevy_tasks",
  "bevy_utils",
  "console_error_panic_hook",
+ "ctrlc",
  "downcast-rs",
  "thiserror",
  "wasm-bindgen",
@@ -139,9 +137,8 @@ dependencies = [
 
 [[package]]
 name = "bevy_core"
-version = "0.14.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6ddeed5ebf2fa75a4d4f32e2da9c60f11037e36252695059a151c6685cd3d72b"
+version = "0.15.0-dev"
+source = "git+https://github.com/shanecelis/bevy?branch=hash-keyboard-input#0c2b661ae524696f22ca08c6461f60876b4afbf7"
 dependencies = [
  "bevy_app",
  "bevy_ecs",
@@ -153,9 +150,8 @@ dependencies = [
 
 [[package]]
 name = "bevy_derive"
-version = "0.14.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c8a8173bad3ed53fa158806b1beda147263337d6ef71a093780dd141b74386b1"
+version = "0.15.0-dev"
+source = "git+https://github.com/shanecelis/bevy?branch=hash-keyboard-input#0c2b661ae524696f22ca08c6461f60876b4afbf7"
 dependencies = [
  "bevy_macro_utils",
  "quote",
@@ -164,9 +160,8 @@ dependencies = [
 
 [[package]]
 name = "bevy_diagnostic"
-version = "0.14.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0b7f82011fd70048be282526a99756d54bf00e874edafa9664ba0dc247678f03"
+version = "0.15.0-dev"
+source = "git+https://github.com/shanecelis/bevy?branch=hash-keyboard-input#0c2b661ae524696f22ca08c6461f60876b4afbf7"
 dependencies = [
  "bevy_app",
  "bevy_core",
@@ -179,18 +174,16 @@ dependencies = [
 
 [[package]]
 name = "bevy_dylib"
-version = "0.14.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f8494bf550eb30f570da1563217bcea25530cf29b35d35887ca6c2d76a411d00"
+version = "0.15.0-dev"
+source = "git+https://github.com/shanecelis/bevy?branch=hash-keyboard-input#0c2b661ae524696f22ca08c6461f60876b4afbf7"
 dependencies = [
  "bevy_internal",
 ]
 
 [[package]]
 name = "bevy_ecs"
-version = "0.14.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2c77fdc3a7230eff2fcebe4bd17c155bd238c660a0089d0f98c39ba0d461b923"
+version = "0.15.0-dev"
+source = "git+https://github.com/shanecelis/bevy?branch=hash-keyboard-input#0c2b661ae524696f22ca08c6461f60876b4afbf7"
 dependencies = [
  "bevy_ecs_macros",
  "bevy_ptr",
@@ -202,14 +195,14 @@ dependencies = [
  "fixedbitset 0.5.7",
  "nonmax",
  "petgraph",
+ "serde",
  "thiserror",
 ]
 
 [[package]]
 name = "bevy_ecs_macros"
-version = "0.14.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9272b511958525306cd141726d3ca59740f79fc0707c439b55a007bcc3497308"
+version = "0.15.0-dev"
+source = "git+https://github.com/shanecelis/bevy?branch=hash-keyboard-input#0c2b661ae524696f22ca08c6461f60876b4afbf7"
 dependencies = [
  "bevy_macro_utils",
  "proc-macro2",
@@ -219,9 +212,8 @@ dependencies = [
 
 [[package]]
 name = "bevy_hierarchy"
-version = "0.14.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "802eca6f341d19ade790ccfaba7044be4d823b708087eb5ac4c1f74e4ea0916a"
+version = "0.15.0-dev"
+source = "git+https://github.com/shanecelis/bevy?branch=hash-keyboard-input#0c2b661ae524696f22ca08c6461f60876b4afbf7"
 dependencies = [
  "bevy_app",
  "bevy_core",
@@ -233,9 +225,8 @@ dependencies = [
 
 [[package]]
 name = "bevy_input"
-version = "0.14.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2d050f1433f48ca23f1ea078734ebff119a3f76eb7d221725ab0f1fd9f81230b"
+version = "0.15.0-dev"
+source = "git+https://github.com/shanecelis/bevy?branch=hash-keyboard-input#0c2b661ae524696f22ca08c6461f60876b4afbf7"
 dependencies = [
  "bevy_app",
  "bevy_ecs",
@@ -248,9 +239,8 @@ dependencies = [
 
 [[package]]
 name = "bevy_internal"
-version = "0.14.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8ddd2b23e44d3a1f8ae547cbee5b6661f8135cc456c5de206e8648789944e7a1"
+version = "0.15.0-dev"
+source = "git+https://github.com/shanecelis/bevy?branch=hash-keyboard-input#0c2b661ae524696f22ca08c6461f60876b4afbf7"
 dependencies = [
  "bevy_a11y",
  "bevy_app",
@@ -274,9 +264,8 @@ dependencies = [
 
 [[package]]
 name = "bevy_log"
-version = "0.14.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bab641fd0de254915ab746165a07677465b2d89b72f5b49367d73b9197548a35"
+version = "0.15.0-dev"
+source = "git+https://github.com/shanecelis/bevy?branch=hash-keyboard-input#0c2b661ae524696f22ca08c6461f60876b4afbf7"
 dependencies = [
  "android_log-sys",
  "bevy_app",
@@ -289,9 +278,8 @@ dependencies = [
 
 [[package]]
 name = "bevy_macro_utils"
-version = "0.14.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c3ad860d35d74b35d4d6ae7f656d163b6f475aa2e64fc293ee86ac901977ddb7"
+version = "0.15.0-dev"
+source = "git+https://github.com/shanecelis/bevy?branch=hash-keyboard-input#0c2b661ae524696f22ca08c6461f60876b4afbf7"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -301,22 +289,22 @@ dependencies = [
 
 [[package]]
 name = "bevy_math"
-version = "0.14.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "51bd6ce2174d3237d30e0ab5b2508480cc7593ca4d96ffb3a3095f9fc6bbc34c"
+version = "0.15.0-dev"
+source = "git+https://github.com/shanecelis/bevy?branch=hash-keyboard-input#0c2b661ae524696f22ca08c6461f60876b4afbf7"
 dependencies = [
  "bevy_reflect",
  "glam",
  "rand",
+ "rand_distr",
+ "serde",
  "smallvec",
  "thiserror",
 ]
 
 [[package]]
 name = "bevy_ptr"
-version = "0.14.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c115c97a5c8a263bd0aa7001b999772c744ac5ba797d07c86f25734ce381ea69"
+version = "0.15.0-dev"
+source = "git+https://github.com/shanecelis/bevy?branch=hash-keyboard-input#0c2b661ae524696f22ca08c6461f60876b4afbf7"
 
 [[package]]
 name = "bevy_ratatui"
@@ -333,9 +321,8 @@ dependencies = [
 
 [[package]]
 name = "bevy_reflect"
-version = "0.14.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "406ea0fce267169c2320c7302d97d09f605105686346762562c5f65960b5ca2f"
+version = "0.15.0-dev"
+source = "git+https://github.com/shanecelis/bevy?branch=hash-keyboard-input#0c2b661ae524696f22ca08c6461f60876b4afbf7"
 dependencies = [
  "bevy_ptr",
  "bevy_reflect_derive",
@@ -351,9 +338,8 @@ dependencies = [
 
 [[package]]
 name = "bevy_reflect_derive"
-version = "0.14.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0427fdb4425fc72cc96d45e550df83ace6347f0503840de116c76a40843ba751"
+version = "0.15.0-dev"
+source = "git+https://github.com/shanecelis/bevy?branch=hash-keyboard-input#0c2b661ae524696f22ca08c6461f60876b4afbf7"
 dependencies = [
  "bevy_macro_utils",
  "proc-macro2",
@@ -364,9 +350,8 @@ dependencies = [
 
 [[package]]
 name = "bevy_state"
-version = "0.14.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0959984092d56885fd3b320ea84fb816821bad6bfa3040b9d4ee850d3273233d"
+version = "0.15.0-dev"
+source = "git+https://github.com/shanecelis/bevy?branch=hash-keyboard-input#0c2b661ae524696f22ca08c6461f60876b4afbf7"
 dependencies = [
  "bevy_app",
  "bevy_ecs",
@@ -378,9 +363,8 @@ dependencies = [
 
 [[package]]
 name = "bevy_state_macros"
-version = "0.14.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "887a98bfa268258377cd073f5bb839518d3a1cd6b96ed81418145485b69378e6"
+version = "0.15.0-dev"
+source = "git+https://github.com/shanecelis/bevy?branch=hash-keyboard-input#0c2b661ae524696f22ca08c6461f60876b4afbf7"
 dependencies = [
  "bevy_macro_utils",
  "proc-macro2",
@@ -390,9 +374,8 @@ dependencies = [
 
 [[package]]
 name = "bevy_tasks"
-version = "0.14.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5a8bfb8d484bdb1e9bec3789c75202adc5e608c4244347152e50fb31668a54f9"
+version = "0.15.0-dev"
+source = "git+https://github.com/shanecelis/bevy?branch=hash-keyboard-input#0c2b661ae524696f22ca08c6461f60876b4afbf7"
 dependencies = [
  "async-executor",
  "futures-lite",
@@ -401,9 +384,8 @@ dependencies = [
 
 [[package]]
 name = "bevy_time"
-version = "0.14.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a6c3d3d14ee8b0dbe4819fd516cc75509b61946134d78e0ee89ad3d1835ffe6c"
+version = "0.15.0-dev"
+source = "git+https://github.com/shanecelis/bevy?branch=hash-keyboard-input#0c2b661ae524696f22ca08c6461f60876b4afbf7"
 dependencies = [
  "bevy_app",
  "bevy_ecs",
@@ -415,9 +397,8 @@ dependencies = [
 
 [[package]]
 name = "bevy_transform"
-version = "0.14.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "97e8aa6b16be573277c6ceda30aebf1d78af7c6ede19b448dcb052fb8601d815"
+version = "0.15.0-dev"
+source = "git+https://github.com/shanecelis/bevy?branch=hash-keyboard-input#0c2b661ae524696f22ca08c6461f60876b4afbf7"
 dependencies = [
  "bevy_app",
  "bevy_ecs",
@@ -429,9 +410,8 @@ dependencies = [
 
 [[package]]
 name = "bevy_utils"
-version = "0.14.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7fab364910e8f5839578aba9cfda00a8388e9ebe352ceb8491a742ce6af9ec6e"
+version = "0.15.0-dev"
+source = "git+https://github.com/shanecelis/bevy?branch=hash-keyboard-input#0c2b661ae524696f22ca08c6461f60876b4afbf7"
 dependencies = [
  "ahash",
  "bevy_utils_proc_macros",
@@ -444,9 +424,8 @@ dependencies = [
 
 [[package]]
 name = "bevy_utils_proc_macros"
-version = "0.14.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ad9db261ab33a046e1f54b35f885a44f21fcc80aa2bc9050319466b88fe58fe3"
+version = "0.15.0-dev"
+source = "git+https://github.com/shanecelis/bevy?branch=hash-keyboard-input#0c2b661ae524696f22ca08c6461f60876b4afbf7"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -455,9 +434,8 @@ dependencies = [
 
 [[package]]
 name = "bevy_window"
-version = "0.14.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c9ea5777f933bf7ecaeb3af1a30845720ec730e007972ca7d4aba2d3512abe24"
+version = "0.15.0-dev"
+source = "git+https://github.com/shanecelis/bevy?branch=hash-keyboard-input#0c2b661ae524696f22ca08c6461f60876b4afbf7"
 dependencies = [
  "bevy_a11y",
  "bevy_app",
@@ -513,6 +491,12 @@ name = "cfg-if"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
+
+[[package]]
+name = "cfg_aliases"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fd16c4719339c4530435d38e511904438d07cce7950afa3718a84ac36c10e89e"
 
 [[package]]
 name = "color-eyre"
@@ -617,6 +601,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "acdd7c62a3665c7f6830a51635d9ac9b23ed385797f70a83bb8bafe9c572ab2b"
 dependencies = [
  "winapi",
+]
+
+[[package]]
+name = "ctrlc"
+version = "3.4.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "672465ae37dc1bc6380a6547a8883d5dd397b0f1faaad4f265726cc7042a5345"
+dependencies = [
+ "nix",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -809,6 +803,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "97b3888a4aecf77e811145cadf6eef5901f4782c53886191b2f693f24761847c"
 
 [[package]]
+name = "libm"
+version = "0.2.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4ec2a862134d2a7d32d7983ddcdd1c4923530833c9f2ea1a44fc5fa473989058"
+
+[[package]]
 name = "lock_api"
 version = "0.4.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -866,7 +866,19 @@ dependencies = [
  "libc",
  "log",
  "wasi",
- "windows-sys",
+ "windows-sys 0.48.0",
+]
+
+[[package]]
+name = "nix"
+version = "0.28.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ab2156c4fce2f8df6c499cc1c763e4394b7482525bf2a9701c9d79d215f519e4"
+dependencies = [
+ "bitflags",
+ "cfg-if",
+ "cfg_aliases",
+ "libc",
 ]
 
 [[package]]
@@ -883,6 +895,16 @@ checksum = "77a8165726e8236064dbb45459242600304b42a5ea24ee2948e18e023bf7ba84"
 dependencies = [
  "overload",
  "winapi",
+]
+
+[[package]]
+name = "num-traits"
+version = "0.2.19"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "071dfc062690e90b734c0b2273ce72ad0ffa95f0c74596bc250dcfd960262841"
+dependencies = [
+ "autocfg",
+ "libm",
 ]
 
 [[package]]
@@ -1015,6 +1037,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ec0be4795e2f6a28069bec0b5ff3e2ac9bafc99e6a9a7dc3547996c5c816922c"
 dependencies = [
  "getrandom",
+]
+
+[[package]]
+name = "rand_distr"
+version = "0.4.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "32cb0b9bc82b0a0876c2dd994a7e7a2683d3e7390ca40e6886785ef0c7e3ee31"
+dependencies = [
+ "num-traits",
+ "rand",
 ]
 
 [[package]]
@@ -1558,6 +1590,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "677d2418bec65e3338edb076e806bc1ec15693c5d0104683f2efe857f61056a9"
 dependencies = [
  "windows-targets 0.48.5",
+]
+
+[[package]]
+name = "windows-sys"
+version = "0.52.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "282be5f36a8ce781fad8c8ae18fa3f9beff57ec1b52cb3de0789201425d9a33d"
+dependencies = [
+ "windows-targets 0.52.6",
 ]
 
 [[package]]

@@ -6,7 +6,9 @@ use bevy::{
 use bevy_ratatui::{
     error::exit_on_error,
     event::KeyEvent,
-    input_forwarding::{Capability, Detected, Emulate, EmulationPolicy, ReleaseKey},
+    input::{
+        Capabilities, DetectedCapabilities, EmulateCapabilities, EmulationPolicy, KeyReleaseMode,
+    },
     kitty::KittyEnabled,
     terminal::RatatuiContext,
     RatatuiPlugins,
@@ -17,10 +19,7 @@ use ratatui::text::Text;
 fn main() {
     let wait_duration = std::time::Duration::from_secs_f64(1. / 60.); // 60 FPS
     App::new()
-        .add_plugins(RatatuiPlugins {
-            enable_input_forwarding: true,
-            ..default()
-        })
+        .add_plugins(RatatuiPlugins::default())
         .add_plugins(ScheduleRunnerPlugin::run_loop(wait_duration))
         .add_systems(
             PreUpdate,
@@ -44,15 +43,16 @@ struct LastBevyKeypress(pub KeyboardInput);
 #[derive(Resource, Deref, DerefMut)]
 struct BevyKeypresses(pub Vec<KeyCode>);
 
+#[allow(clippy::too_many_arguments)] // TODO: simplify
 fn draw_scene_system(
     mut context: ResMut<RatatuiContext>,
     kitty_enabled: Option<Res<KittyEnabled>>,
     last_keypress: Option<Res<LastKeypress>>,
     last_bevy_keypress: Option<Res<LastBevyKeypress>>,
     bevy_keypresses: Option<Res<BevyKeypresses>>,
-    emulate: Option<Res<Emulate>>,
-    detected: Res<Detected>,
-    release_key: Res<ReleaseKey>,
+    emulate: Option<Res<EmulateCapabilities>>,
+    detected: Res<DetectedCapabilities>,
+    release_key: Res<KeyReleaseMode>,
     policy: Res<EmulationPolicy>,
 ) -> color_eyre::Result<()> {
     context.draw(|frame| {
@@ -62,16 +62,16 @@ fn draw_scene_system(
             "Kitty protocol not supported in this terminal."
         });
 
-        text.push_line(match detected.0 {
-            Capability::ALL => "Detected modifiers and key release.",
-            Capability::KEY_RELEASE => "Detected key release but not modifiers.",
-            Capability::MODIFIER => "Detected modifiers but not key release.",
+        text.push_line(match **detected {
+            Capabilities::ALL => "Detected modifiers and key release.",
+            Capabilities::KEY_RELEASE => "Detected key release but not modifiers.",
+            Capabilities::MODIFIER => "Detected modifiers but not key release.",
             _ => "Did not detect modifiers or key release.",
         });
         text.push_line(match policy.emulate_capabilities(&detected) {
-            Capability::ALL => "Emulate modifiers and key release.",
-            Capability::KEY_RELEASE => "Emulate key release.",
-            Capability::MODIFIER => "Emulate modifiers.",
+            Capabilities::ALL => "Emulate modifiers and key release.",
+            Capabilities::KEY_RELEASE => "Emulate key release.",
+            Capabilities::MODIFIER => "Emulate modifiers.",
             _ => "Do not emulate modifiers or key release.",
         });
         text.push_line(if emulate.is_some() {
@@ -123,14 +123,14 @@ fn draw_scene_system(
 fn hotkeys(
     input: Res<ButtonInput<KeyCode>>,
     mut exit: EventWriter<AppExit>,
-    mut release_key: ResMut<ReleaseKey>,
+    mut release_key: ResMut<KeyReleaseMode>,
     mut policy: ResMut<EmulationPolicy>,
 ) {
     use bevy::input::keyboard::KeyCode::*;
     if input.just_pressed(KeyQ) | input.just_pressed(Escape) {
         exit.send_default();
     } else if input.just_pressed(KeyR) {
-        use ReleaseKey::*;
+        use KeyReleaseMode::*;
         *release_key = match *release_key {
             OnNextKey => FrameCount(60),
             FrameCount(_) => Duration(std::time::Duration::from_secs(2)),
@@ -140,7 +140,10 @@ fn hotkeys(
     } else if input.just_pressed(KeyP) {
         // Mutate the policy to ensure that the Emulate marker is removed
         // (however briefly).
-        *policy = *policy;
+        #[allow(clippy::self_assignment)]
+        {
+            *policy = *policy;
+        }
     }
 }
 

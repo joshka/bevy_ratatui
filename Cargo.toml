@@ -11,7 +11,7 @@ categories = ["command-line-interface"]
 keywords = ["cli", "ratatui", "terminal", "tui", "bevy"]
 
 [dependencies]
-bevy = { version = "0.14", default-features = false, features = [
+bevy = { version = "0.15.0-dev", default-features = false, git = "https://github.com/shanecelis/bevy", branch = "hash-keyboard-input", features = [
     "dynamic_linking",
 ] }
 bitflags = "2.6.0"
@@ -30,7 +30,7 @@ opt-level = 3
 
 [dev-dependencies]
 rand = "0.8.5"
-bevy = { version = "0.14", default-features = false, features = [
+bevy = { version = "0.15.0-dev", default-features = false, git = "https://github.com/shanecelis/bevy", branch = "hash-keyboard-input", features = [
     "dynamic_linking",
     "bevy_state",
 ] }

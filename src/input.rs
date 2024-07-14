@@ -1,10 +1,105 @@
 //! Input forwarding for the keyboard
-
-use std::{
-    collections::HashSet,
-    hash::{Hash, Hasher},
-    time::Duration,
-};
+//!
+//! Forwards terminal key events to the bevy input system.
+//!
+//! With this plugin one can use the standard bevy input system like
+//! [`ButtonInput`][bevy::input::ButtonInput] with bevy_ratatui:
+//!
+//! - `ButtonInput`[`<Key>`][bevy::input::keyboard::Key] for logical keys,
+//! - `ButtonInput`[`<KeyCode>`][bevy::input::keyboard::KeyCode] for physical keys,
+//! - and `EventReader<`[`KeyboardInput`][bevy::input::keyboard::KeyboardInput]`>` for its
+//!   lowest-level events.
+//!
+//! The crossterm events are still present and usable with this plugin present.
+//!
+//! # Usage
+//!
+//! This plugin is automatically included in the [RatatuiPlugins] group. If you are not using the
+//! `RatatuiPlugins` group, you can add the plugin to your app like so:
+//!
+//! ```no_run
+//! # use bevy::prelude::*;
+//! # use bevy_ratatui::input::*;
+//! # let mut app = App::new();
+//! app.add_plugin(KeyboardPlugin);
+//! ```
+//!
+//! # Example
+//!
+//! The [bevy_keys](https://github.com/joshka/bevy_ratatui/tree/main/examples/bevy_keys.rs) example
+//! shows the keys crossterm has received and the bevy keys that are emitted. In addition it will
+//! show which capabilities have been detected and the emulation that is being used.
+//!
+//! This example can be instructive in determining which capabilities a terminal may or may not
+//! provide. Some terminals require enabling the kitty protocol and some terminals only support part
+//! of the protocol.
+//!
+//! # Configuration
+//!
+//! There are two things you can configure on this plugin: the release key timer, and the emulation
+//! policy. In order to explain those, it helps to have a brief overview of what the terminal may or
+//! may not provide.
+//!
+//! ## Terminal
+//!
+//! Terminal input events are varied. A standard terminal for instance only provides key press
+//! events and modifier keys are not given except in conjunction with another key. Luckily
+//! extensions exist to make key handling more comprehensive like the [kitty comprehensive keyboard
+//! handling protocol](https://sw.kovidgoyal.net/kitty/keyboard-protocol/) that bevy_ratatui can
+//! use.
+//!
+//! In order to provide a semblance of expected input for bevy, this plugin can emulate key releases
+//! and modifier keys when necessary.
+//!
+//! ## Capability Emulation
+//!
+//! There are two capabilities that may or may not be present on the terminal that this plugin
+//! concerns it self with:
+//!
+//! - key releases,
+//! - and modifier keys.
+//!
+//! By default bevy_ratatui will try to use the kitty protocol. If it's present, this plugin will
+//! detect whether there are key releases or modifier keys emitted. These are represented in the
+//! [Detected] resource.
+//!
+//! ### Emulation Policy
+//!
+//! You can choose what to emulate using the [EmulationPolicy] resource. The default policy of
+//! [Automatic][EmulationPolicy::Automatic] will emulate whatever capability has not been detected.
+//! The [Manual][EmulationPolicy::Manual] policy emulates whatever you ask it to.
+//!
+//! ## Key Release Time
+//!
+//! If the terminal does not support sending key release events, this plugin can emulate them. By
+//! default it will use a timeout to emit a release key for the last key pressed. An event stream
+//! might look like this:
+//!
+//! `Press A, Press B`
+//!
+//! This plugin will emit events:
+//!
+//! `Press A, Release A, Press B, (timer finishes) Release B`
+//!
+//! The timer is set to one second by default but it can be configured like so:
+//!
+//! ```no_run
+//! # use std::time::Duration;
+//! # use bevy::prelude::*;
+//! # use bevy_ratatui::input::*;
+//! # let mut app = App::new();
+//! app.insert_resource(ReleaseKey::Duration(Duration::from_secs_f32(0.5)));
+//! ```
+//!
+//! There are other policies one can choose by configuring [ReleaseKey]. See its documentation for
+//! more details.
+//!
+//! # Terminal Choice
+//!
+//! For the best experience, it is recommended to enable the kitty protocol on your terminal. [See
+//! here](https://sw.kovidgoyal.net/kitty/keyboard-protocol/) for a list of terminals implementing
+//! this protocol.
+use std::{collections::HashSet, time::Duration};
 
 use bevy::{
     input::{keyboard::KeyboardInput, ButtonState},
@@ -12,63 +107,10 @@ use bevy::{
 };
 use crossterm::event::KeyModifiers;
 
-use crate::event::{InputSet, KeyEvent};
-
-bitflags::bitflags! {
-    /// Crudely defines some capabilities of terminal. Useful for representing
-    /// both detection ([Detect]) and emulation ([EmulationPolicy]).
-    #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
-    pub struct Capability: u8 {
-        /// Represents a terminal that emits its own key release events.
-        const KEY_RELEASE = 0b0000_0001;
-        /// Represents a terminal that emits its own modifier key press and
-        /// release events independently from other keys.
-        const MODIFIER = 0b0000_0010;
-        const ALL = Self::KEY_RELEASE.bits() | Self::MODIFIER.bits();
-    }
-}
-
-/// Keyboard emulation policy
-///
-/// - The [Automatic][EmulationPolicy::Automatic] policy will emulate key
-///   release or modifiers if they have not been detected.
-///
-/// - The [Manual][EmulationPolicy::Manual] policy defines whether modifiers or
-///   key releases will be emulated.
-///
-/// Note: If key releases are emulated and key releases are provided by the
-/// terminal, dupliate events may be sent.
-#[derive(Debug, Default, Resource, Clone, Copy)]
-pub enum EmulationPolicy {
-    /// Emulate everything that has not been detected.
-    #[default]
-    Automatic,
-    /// Define what will be emulated.
-    Manual(Capability),
-}
-
-impl EmulationPolicy {
-    /// Return what capabilities to emulate.
-    pub fn emulate_capabilities(&self, detected: &Detected) -> Capability {
-        match self {
-            EmulationPolicy::Automatic => !detected.0,
-            EmulationPolicy::Manual(capabilitiy) => *capabilitiy,
-        }
-    }
-}
-
-/// This represents the currently detected capabilities of the terminal.
-///
-/// When the program starts, will be empty and this will return true:
-/// `detected.is_empty()`. When a key is pressed and released, if a key release
-/// was emitted, then `detected` will contain [Capability::KEY_RELEASE].
-///
-/// Likewise for a modifier key, if any modifier events are detected, then
-/// `detected` will contain [Capability::MODIFIER].
-///
-/// Once those flags are set, they are never unset.
-#[derive(Debug, Resource, Default, Deref)]
-pub struct Detected(pub Capability);
+use crate::{
+    event::{InputSet, KeyEvent},
+    terminal::DummyWindow,
+};
 
 /// Pass crossterm key events through to the bevy input system. See
 /// [input_forwarding][crate::input_forwarding] for more details.
@@ -84,34 +126,82 @@ impl Plugin for KeyboardPlugin {
             // We need this plugin for the delay timer.
             app.add_plugins(bevy::time::TimePlugin);
         }
-        app.init_resource::<ReleaseKey>()
-            .init_resource::<Detected>()
+        app.init_resource::<KeyReleaseMode>()
+            .init_resource::<KeyReleaseTimer>()
+            .init_resource::<DetectedCapabilities>()
             .init_resource::<EmulationPolicy>()
-            .init_resource::<Emulate>()
-            .add_systems(Startup, setup_window)
+            .init_resource::<EmulateCapabilities>()
             .add_systems(
                 PreUpdate,
-                reset_emulation_check
-                    .run_if(resource_changed::<EmulationPolicy>)
-                    .in_set(InputSet::Pre),
-            )
-            .add_systems(
-                PreUpdate,
-                (detect_capabilities, check_for_emulation)
-                    .chain()
-                    .run_if(resource_exists::<Emulate>)
-                    .in_set(InputSet::CheckEmulation),
+                detect_capabilities.in_set(InputSet::CheckEmulation),
             )
             .add_systems(
                 PreUpdate,
                 (
-                    send_key_events_with_emulation.run_if(resource_exists::<Emulate>),
-                    send_key_events_no_emulation.run_if(not(resource_exists::<Emulate>)),
+                    (emulate_release_keys, emulate_release_modifiers).chain(),
+                    emulate_key_events.run_if(resource_exists::<EmulateCapabilities>),
+                    send_key_events_no_emulation
+                        .run_if(not(resource_exists::<EmulateCapabilities>)),
                 )
                     .in_set(InputSet::EmitBevy),
             );
     }
 }
+
+bitflags::bitflags! {
+    /// Defines the capabilities of the terminal. Used to represet both detection
+    /// ([`DetectedCapabilities`]) and emulation ([`EmulationPolicy`]).
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+    pub struct Capabilities: u8 {
+        /// Represents a terminal that emits its own key release events.
+        const KEY_RELEASE = 0b0000_0001;
+        /// Represents a terminal that emits its own modifier key press and release events
+        /// independently from other keys.
+        const MODIFIER = 0b0000_0010;
+        const ALL = Self::KEY_RELEASE.bits() | Self::MODIFIER.bits();
+    }
+}
+
+/// Keyboard emulation policy
+///
+/// - The [`Automatic`][EmulationPolicy::Automatic] policy will emulate key release or modifiers if
+///   they have not been detected.
+///
+/// - The [`Manual`][EmulationPolicy::Manual] policy defines whether modifiers or key releases will
+///   be emulated.
+///
+/// Note: Any detected capabilities will not be emulated.
+#[derive(Debug, Default, Resource, Clone, Copy)]
+pub enum EmulationPolicy {
+    /// Emulate everything that has not been detected.
+    #[default]
+    Automatic,
+    /// Define what will be emulated.
+    Manual(Capabilities),
+}
+
+impl EmulationPolicy {
+    /// Return which capabilities to emulate based on the detected capabilities.
+    pub fn emulate_capabilities(&self, detected: &DetectedCapabilities) -> Capabilities {
+        match self {
+            EmulationPolicy::Automatic => detected.complement(),
+            EmulationPolicy::Manual(capabilties) => *capabilties - **detected,
+        }
+    }
+}
+
+/// The currently detected capabilities of the terminal.
+///
+/// When the application starts, this will be empty `detected.is_empty()` returns true. When a key
+/// is pressed and released, if a key release event was emitted, then `detected` will contain
+/// [Capability::KEY_RELEASE].
+///
+/// Likewise for a modifier key, if any modifier events are detected, then `detected` will contain
+/// [Capability::MODIFIER].
+///
+/// Once those flags are set, they are never unset.
+#[derive(Debug, Resource, Default, Deref, DerefMut)]
+pub struct DetectedCapabilities(pub Capabilities);
 
 /// A new type so we can implement Default and use with `Local`.
 #[derive(Debug, Deref, DerefMut)]
@@ -123,54 +213,34 @@ impl Default for Modifiers {
     }
 }
 
-// I wish KeyboardInput had the Hash derive.
-//
-// TODO: Drop this if KeyboardInput gets a Hash impl.
-// [PR](https://github.com/bevyengine/bevy/pull/14263)
-#[derive(Deref, DerefMut, PartialEq, Eq)]
-struct KeyInput(KeyboardInput);
-
-impl Hash for KeyInput {
-    fn hash<H>(&self, state: &mut H)
-    where
-        H: Hasher,
-    {
-        self.key_code.hash(state);
-        self.logical_key.hash(state);
-        self.state.hash(state);
-        self.window.hash(state);
-    }
-}
-
 /// This is a double-buffer for the last keys pressed.
 ///
-/// - `.0` is current frame's last keys pressed.
-/// - `.1` is the next frame's last keys pressed.
-///
-/// During processing we read from `.0` and write to `.1`.
+/// During processing we read from `current_frame` and write to `next_frame`.
 #[derive(Default)]
-struct LastPress(HashSet<KeyInput>, HashSet<KeyInput>);
+struct LastPressedKeys {
+    current_frame: HashSet<KeyboardInput>,
+    next_frame: HashSet<KeyboardInput>,
+}
 
-impl LastPress {
+impl LastPressedKeys {
     fn swap(&mut self) {
-        std::mem::swap(&mut self.0, &mut self.1);
+        std::mem::swap(&mut self.current_frame, &mut self.next_frame);
     }
 }
 
-/// If the terminal does not support sending key release events, this plugin will
-/// emulate them. A crossterm event stream might look like this:
+/// If the terminal does not support sending key release events, this plugin will emulate them. A
+/// crossterm event stream might look like this:
 ///
 /// `Press A, Press B`
 ///
-/// which will result in bevy events, i.e., a key release will be emitted on the
-/// next press key event.
+/// which will result in bevy events, i.e., a key release will be emitted on the next press key
+/// event.
 ///
 /// `Press A, Release A, Press B`
 ///
-/// `A` is released when `B` is pressed, but how does one deal with releasing
-/// `B`? If another key is pressed, that will release `B`. [ReleaseKey] concerns
-/// itself with how to handle the last pressed key assuming it will be a while
-/// before another key press comes.
+/// `A` is released when `B` is pressed, but how does one deal with releasing `B`? If another key is
+/// pressed, that will release `B`. [ReleaseKey] concerns itself with how to handle the last pressed
+/// key assuming it will be a while before another key press comes.
 ///
 /// This plugin will emit events like so depending on the variant:
 ///
@@ -178,8 +248,7 @@ impl LastPress {
 ///
 ///   `Press A, Release A, Press B, (timer finishes) Release B`
 ///
-///   The default is a one second duration before emitting a release on the last
-///   pressed key
+///   The default is a one second duration before emitting a release on the last pressed key
 ///
 /// - FrameCount
 ///
@@ -193,11 +262,10 @@ impl LastPress {
 ///
 ///   `Press A, Release A, Press B`
 ///
-///   The `Release B` event won't come until another key is pressed. This will
-///   make it look like the last key pressed is being held down according to the
-///   bevy API.
+///   The `Release B` event won't come until another key is pressed. This will make it look like the
+///   last key pressed is being held down according to the bevy API.
 #[derive(Resource, Debug)]
-pub enum ReleaseKey {
+pub enum KeyReleaseMode {
     /// Release key after a short duration.
     Duration(Duration),
     /// Release key after a number of frames.
@@ -208,202 +276,218 @@ pub enum ReleaseKey {
     OnNextKey,
 }
 
-impl Default for ReleaseKey {
+impl Default for KeyReleaseMode {
     /// Set the release key timer for 1 second by default.
     fn default() -> Self {
-        ReleaseKey::Duration(Duration::from_secs(1))
+        KeyReleaseMode::Duration(Duration::from_secs(1))
     }
 }
 
-#[derive(Default)]
-enum ReleaseKeyState {
-    #[default]
-    None,
-    Count(u32),
-    Timer(Timer),
-}
-
-impl ReleaseKey {
-    fn tick(&self, state: &mut ReleaseKeyState, delta: Duration) {
-        use ReleaseKey::*;
-        match self {
-            FrameCount(_) | Immediate => {
-                if let ReleaseKeyState::Count(ref mut c) = state {
-                    *c = c.saturating_add(1);
-                } else {
-                    *state = ReleaseKeyState::Count(0);
-                }
-            }
-            Duration(d) => {
-                if let ReleaseKeyState::Timer(ref mut timer) = state {
-                    timer.tick(delta);
-                } else {
-                    *state = ReleaseKeyState::Timer(Timer::new(*d, TimerMode::Once));
-                }
-            }
-            _ => (),
-        }
-    }
-
-    fn finished(&self, state: &ReleaseKeyState) -> bool {
-        use ReleaseKey::*;
-        match self {
-            OnNextKey => false,
-            FrameCount(target) => {
-                let ReleaseKeyState::Count(ref count) = state else {
-                    return false;
-                };
-                count >= target
-            }
-            Duration(_) => {
-                let ReleaseKeyState::Timer(ref timer) = state else {
-                    return false;
-                };
-                timer.finished()
-            }
-            Immediate => true,
-        }
-    }
-
-    fn reset(&self, state: &mut ReleaseKeyState) {
-        use ReleaseKey::*;
-        match self {
-            FrameCount(_) | Immediate => *state = ReleaseKeyState::Count(0),
-            Duration(d) => {
-                if let ReleaseKeyState::Timer(ref mut timer) = state {
-                    timer.reset();
-                } else {
-                    *state = ReleaseKeyState::Timer(Timer::new(*d, TimerMode::Once));
-                }
-            }
-            _ => (),
-        }
-    }
-}
-
-#[allow(clippy::too_many_arguments)]
-fn detect_capabilities(mut keys: EventReader<KeyEvent>, mut detected: ResMut<Detected>) {
-    for key_event in keys.read() {
-        if matches!(key_event.code, crossterm::event::KeyCode::Modifier(_)) {
-            detected.0 |= Capability::MODIFIER;
-        }
-        if matches!(key_event.kind, crossterm::event::KeyEventKind::Release) {
-            detected.0 |= Capability::KEY_RELEASE;
-        }
-    }
-}
-
-/// Marker resource used to determine whether this plugin will emulate any
-/// terminal capabilities. If it is not present, that's the best case because
-/// the terminal doesn't require this plugin to emulate any capabilities. It's a
-/// simpler and faster code path.
 #[derive(Debug, Resource, Default)]
-pub struct Emulate;
+struct KeyReleaseTimer {
+    mode: KeyReleaseMode,
+    timer: Option<Timer>,
+    frame_count: u32,
+    finished: bool,
+    // #[default]
+    // None,
+    // Count(u32),
+    // Timer(Timer),
+}
 
-fn check_for_emulation(
-    detected: Res<Detected>,
+impl KeyReleaseTimer {
+    fn finished(&self) -> bool {
+        self.finished
+    }
+
+    fn tick(&mut self, delta: Duration) {
+        match self.mode {
+            KeyReleaseMode::Duration(_) => {
+                if let Some(ref mut timer) = self.timer {
+                    timer.tick(delta);
+                    self.finished = timer.finished();
+                }
+            }
+            KeyReleaseMode::FrameCount(count) => {
+                self.frame_count = self.frame_count.saturating_add(1);
+                self.finished = self.frame_count >= count;
+            }
+            KeyReleaseMode::Immediate => self.finished = true,
+            KeyReleaseMode::OnNextKey => self.finished = false,
+        }
+    }
+
+    fn reset(&mut self) {
+        match self.mode {
+            KeyReleaseMode::Duration(duration) => {
+                self.timer = Some(Timer::new(duration, TimerMode::Once));
+            }
+            KeyReleaseMode::FrameCount(_) => self.frame_count = 0,
+            KeyReleaseMode::Immediate => {}
+            KeyReleaseMode::OnNextKey => {}
+        }
+        self.finished = false;
+    }
+}
+
+/// Marker resource used to determine whether this plugin will emulate any terminal capabilities. If
+/// it is not present, that's the best case because the terminal doesn't require this plugin to
+/// emulate any capabilities. It's a simpler and faster code path.
+#[derive(Debug, Resource, Default)]
+pub struct EmulateCapabilities;
+
+fn detect_capabilities(
     policy: Res<EmulationPolicy>,
+    mut keys: EventReader<KeyEvent>,
+    mut detected: ResMut<DetectedCapabilities>,
     mut commands: Commands,
 ) {
-    if policy.emulate_capabilities(&detected).is_empty() {
+    if policy.is_changed() {
+        commands.insert_resource(EmulateCapabilities);
+        *detected = DetectedCapabilities::default();
+    } else if policy.emulate_capabilities(&detected).is_empty() {
         // We don't need to emulate anything, so don't.
-        commands.remove_resource::<Emulate>();
+        commands.remove_resource::<EmulateCapabilities>();
+    }
+    for key_event in keys.read() {
+        if matches!(key_event.code, crossterm::event::KeyCode::Modifier(_)) {
+            **detected |= Capabilities::MODIFIER;
+        }
+        if matches!(key_event.kind, crossterm::event::KeyEventKind::Release) {
+            **detected |= Capabilities::KEY_RELEASE;
+        }
     }
 }
 
-fn reset_emulation_check(mut commands: Commands) {
-    commands.insert_resource(Emulate);
+fn emulate_release_keys(
+    time: Res<Time>,
+    window: Query<Entity, With<DummyWindow>>,
+    emulation_policy: Res<EmulationPolicy>,
+    detected_capabilities: Res<DetectedCapabilities>,
+    mut key_release_timer: ResMut<KeyReleaseTimer>,
+    mut crossterm_keys: EventReader<KeyEvent>,
+    mut last_pressed: Local<LastPressedKeys>,
+    mut bevy_keys: EventWriter<KeyboardInput>,
+) {
+    let emulation = emulation_policy.emulate_capabilities(&detected_capabilities);
+    if !emulation.contains(Capabilities::KEY_RELEASE) {
+        return;
+    }
+    key_release_timer.tick(time.delta());
+    if !key_release_timer.finished() && crossterm_keys.is_empty() {
+        // only release keys when either the timer has finished or a key has been pressed.
+        return;
+    }
+    for crossterm_key in crossterm_keys.read() {
+        if let Some((bevy_key, _, _)) = key_event_to_bevy(&crossterm_key, window.single()) {
+            if last_pressed.current_frame.contains(&bevy_key) {
+                // the key is being held down, so we shouldn't release it.
+                last_pressed.current_frame.remove(&bevy_key);
+            }
+            last_pressed.next_frame.insert(bevy_key);
+        }
+    }
+    for bevy_key in last_pressed.current_frame.drain() {
+        let state = match bevy_key.state {
+            ButtonState::Pressed => ButtonState::Released, // a key was pressed
+            ButtonState::Released => ButtonState::Pressed, // a repeated key was "released"
+        };
+        bevy_keys.send(KeyboardInput { state, ..bevy_key });
+    }
 }
 
-#[allow(clippy::too_many_arguments)]
-fn send_key_events_with_emulation(
-    mut keys: EventReader<KeyEvent>,
+fn emulate_release_modifiers(
     window: Query<Entity, With<DummyWindow>>,
+    emulation_policy: Res<EmulationPolicy>,
+    detected_capabilities: Res<DetectedCapabilities>,
+    key_release_timer: Res<KeyReleaseTimer>,
     mut modifiers: Local<Modifiers>,
-    mut last_pressed: Local<LastPress>,
-    mut keyboard_input: EventWriter<KeyboardInput>,
-    release_key: Res<ReleaseKey>,
-    mut release_key_state: Local<ReleaseKeyState>,
-    time: Res<Time>,
-    detected: Res<Detected>,
-    policy: Res<EmulationPolicy>,
+    mut bevy_keys: EventWriter<KeyboardInput>,
 ) {
-    release_key.tick(&mut release_key_state, time.delta());
-    if keys.is_empty() && !release_key.finished(&release_key_state) {
+    let emulation = emulation_policy.emulate_capabilities(&detected_capabilities);
+    if !emulation.contains(Capabilities::MODIFIER) {
+        return;
+    }
+    // calling key_release_timer.tick() is not needed as we tick it in emulate_release_keys
+    if !key_release_timer.finished() {
+        return;
+    }
+    let window = window.single();
+    for modifier in **modifiers {
+        let state = ButtonState::Released;
+        let modifier_event =
+            modifier_to_bevy(crossterm_modifier_to_bevy_key(modifier), state, window);
+        bevy_keys.send(modifier_event);
+    }
+    **modifiers = KeyModifiers::empty();
+}
+
+#[allow(clippy::too_many_arguments)] // TODO: simplify
+fn emulate_key_events(
+    window: Query<Entity, With<DummyWindow>>,
+    mut crossterm_keys: EventReader<KeyEvent>,
+    mut modifiers: Local<Modifiers>,
+    mut last_pressed: Local<LastPressedKeys>,
+    mut bevy_keys: EventWriter<KeyboardInput>,
+    mut key_release_timer: Local<KeyReleaseTimer>,
+    detected_capabilities: Res<DetectedCapabilities>,
+    emulation_policy: Res<EmulationPolicy>,
+) {
+    if crossterm_keys.is_empty() {
         return;
     }
 
-    let bevy_window = window.single();
-    for key_event in keys.read() {
-        if let Some((bevy_event, mods, repeated)) = key_event_to_bevy(key_event, bevy_window) {
-            let emulation = policy.emulate_capabilities(&detected);
-            if emulation.contains(Capability::MODIFIER) && mods != **modifiers {
-                let delta = mods.symmetric_difference(**modifiers);
-                for flag in delta {
-                    let state = if mods.contains(flag) {
-                        // This flag has been added.
-                        ButtonState::Pressed
-                    } else {
-                        // This flag has been removed.
-                        ButtonState::Released
-                    };
-                    let modifier_event =
-                        modifier_to_bevy(crossterm_modifier_to_bevy_key(flag), state, bevy_window);
-                    keyboard_input.send(modifier_event);
-                }
-                **modifiers = mods;
+    let window = window.single();
+    let emulation = emulation_policy.emulate_capabilities(&detected_capabilities);
+    for key_event in crossterm_keys.read() {
+        if let Some((bevy_key, key_modifiers, is_repeated)) = key_event_to_bevy(key_event, window) {
+            if emulation.contains(Capabilities::MODIFIER) && key_modifiers != **modifiers {
+                send_modifier_keys(key_modifiers, &mut modifiers, window, &mut bevy_keys);
             }
 
-            if repeated {
-                // Repeated key events are converted to key release events by
-                // `key_event_to_bevy()`. But are queued up to emit a key press
-                // on the next frame.
-                last_pressed.1.insert(KeyInput(bevy_event.clone()));
+            // Repeated key events are converted to key release events by `key_event_to_bevy()`.
+            // But are queued up to emit a key press on the next frame.
+            if is_repeated {
+                last_pressed.next_frame.insert(bevy_key.clone());
             }
-            if emulation.contains(Capability::KEY_RELEASE) {
-                // Must send the release events ourselves.
-                let wrapped = KeyInput(bevy_event.clone());
-                if let Some(last_press) = last_pressed.0.take(&wrapped) {
-                    // It's being held down. Pass to the next frame.
-                    last_pressed.1.insert(last_press);
-                } else {
-                    last_pressed.1.insert(wrapped);
-                    keyboard_input.send(bevy_event);
-                }
-            } else {
-                keyboard_input.send(bevy_event);
-            }
+
+            last_pressed.next_frame.insert(bevy_key.clone());
+            bevy_keys.send(bevy_key);
         }
     }
-    for e in last_pressed.0.drain() {
-        // In general this is where we emit key released events. However,
-        // we also emit key pressed events for repeated keys.
+    for key in last_pressed.current_frame.drain() {
+        // In general this is where we emit key released events. However, we also emit key pressed
+        // events for repeated keys.
         let reciprocal_event = KeyboardInput {
-            state: match e.0.state {
+            state: match key.state {
                 ButtonState::Pressed => ButtonState::Released,
                 ButtonState::Released => ButtonState::Pressed,
             },
-            ..e.0
+            ..key
         };
-        keyboard_input.send(reciprocal_event);
-    }
-
-    if release_key.finished(&release_key_state)
-        && policy
-            .emulate_capabilities(&detected)
-            .contains(Capability::MODIFIER)
-    {
-        // Release the modifiers too if we've timed out.
-        for flag in **modifiers {
-            let state = ButtonState::Released;
-            let modifier_event =
-                modifier_to_bevy(crossterm_modifier_to_bevy_key(flag), state, bevy_window);
-            keyboard_input.send(modifier_event);
-        }
-        **modifiers = KeyModifiers::empty();
+        bevy_keys.send(reciprocal_event);
     }
     last_pressed.swap();
-    release_key.reset(&mut release_key_state);
+    key_release_timer.reset();
+}
+
+fn send_modifier_keys(
+    key_modifiers: KeyModifiers,
+    modifiers: &mut Local<Modifiers>,
+    window: Entity,
+    bevy_keys: &mut EventWriter<KeyboardInput>,
+) {
+    for modifier in key_modifiers.symmetric_difference(***modifiers) {
+        let button_state = if key_modifiers.contains(modifier) {
+            ButtonState::Pressed
+        } else {
+            ButtonState::Released
+        };
+        let bevy_key = crossterm_modifier_to_bevy_key(modifier);
+        let event = modifier_to_bevy(bevy_key, button_state, window);
+        bevy_keys.send(event);
+    }
+    ***modifiers = key_modifiers;
 }
 
 /// Send bevy events without any emulation. This merely shows how simple life is
@@ -430,15 +514,6 @@ fn send_key_events_no_emulation(
             keyboard_input.send(bevy_event);
         }
     }
-}
-
-#[derive(Debug, Component)]
-struct DummyWindow;
-
-/// This is a dummy window to satisfy the [KeyboardInput] struct.
-fn setup_window(mut commands: Commands) {
-    // Insert our window entity so that other parts of our app can use them.
-    commands.spawn(DummyWindow);
 }
 
 fn modifier_to_bevy(
