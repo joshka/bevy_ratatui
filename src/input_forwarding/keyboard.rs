@@ -30,11 +30,11 @@ bitflags::bitflags! {
 
 /// Keyboard emulation policy
 ///
-/// - The [Automatic][EmulationPolicy::Automatic] policy will emulate key
-///   release or modifiers if they have not been detected.
+/// - The [Automatic][EmulationPolicy::Automatic] policy will emulate key release or modifiers if
+///   they have not been detected.
 ///
-/// - The [Manual][EmulationPolicy::Manual] policy defines whether modifiers or
-///   key releases will be emulated.
+/// - The [Manual][EmulationPolicy::Manual] policy defines whether modifiers or key releases will be
+///   emulated.
 ///
 /// Note: If key releases are emulated and key releases are provided by the
 /// terminal, dupliate events may be sent.
