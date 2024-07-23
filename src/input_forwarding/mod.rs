@@ -5,7 +5,8 @@
 //!
 //! - `ButtonInput`[`<Key>`][bevy::input::keyboard::Key] for logical keys,
 //! - `ButtonInput`[`<KeyCode>`][bevy::input::keyboard::KeyCode] for physical keys,
-//! - and `EventReader<`[`KeyboardInput`][bevy::input::keyboard::KeyboardInput]`>` for its lowest-level events.
+//! - and `EventReader<`[`KeyboardInput`][bevy::input::keyboard::KeyboardInput]`>` for its
+//!   lowest-level events.
 //!
 //! The crossterm events are still present and usable with this plugin present.
 //!
