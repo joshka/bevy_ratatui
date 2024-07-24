@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 
 ## [unreleased]
+
+## [0.6.1](https://github.com/joshka/bevy_ratatui/compare/v0.6.0...v0.6.1) - 2024-07-23
+
+### Added
+- Emit bevy_input keyboard events ([#13](https://github.com/joshka/bevy_ratatui/pull/13))
+
+### Other
+- Removed dynamic_linking feature ([#17](https://github.com/joshka/bevy_ratatui/pull/17))
 - Pass crossterm key event to bevy key handling.
 
 ## [0.5.3](https://github.com/joshka/bevy_ratatui/compare/v0.5.2...v0.5.3) - 2024-07-05
