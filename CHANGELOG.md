@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [unreleased]
 
+## [0.6.2](https://github.com/joshka/bevy_ratatui/compare/v0.6.1...v0.6.2) - 2024-08-13
+
+### Other
+- Bump ratatui from 0.27.0 to 0.28.0 in the cargo-dependencies group ([#20](https://github.com/joshka/bevy_ratatui/pull/20))
+- Bump the cargo-dependencies group with 2 updates ([#18](https://github.com/joshka/bevy_ratatui/pull/18))
+
 ## [0.6.1](https://github.com/joshka/bevy_ratatui/compare/v0.6.0...v0.6.1) - 2024-07-23
 
 ### Added
