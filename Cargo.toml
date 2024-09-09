@@ -16,7 +16,7 @@ bitflags = "2.6.0"
 color-eyre = "0.6.3"
 crossterm = "0.28.1"
 ratatui = { version = "0.28.1", features = ["unstable-widget-ref"] }
-smol_str = "0.2.2"
+smol_str = "0.3.1"
 
 # Enable a small amount of optimization in debug mode
 [profile.dev]
