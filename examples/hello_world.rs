@@ -19,7 +19,7 @@ fn main() {
 fn hello_world(mut context: ResMut<RatatuiContext>) -> color_eyre::Result<()> {
     context.draw(|frame| {
         let text = ratatui::text::Text::raw("hello world\nPress 'q' to Quit");
-        frame.render_widget(text, frame.size())
+        frame.render_widget(text, frame.area())
     })?;
     Ok(())
 }

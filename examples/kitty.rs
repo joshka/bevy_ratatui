@@ -47,7 +47,7 @@ fn draw_scene_system(
             text.push_line(format!("{code_string} key was {kind_string}!"));
         }
 
-        frame.render_widget(text.centered(), frame.size())
+        frame.render_widget(text.centered(), frame.area())
     })?;
     Ok(())
 }
