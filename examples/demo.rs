@@ -46,7 +46,7 @@ fn ui_system(
     bg_color: Res<BackgroundColor>,
 ) -> color_eyre::Result<()> {
     context.draw(|frame| {
-        let area = frame.size();
+        let area = frame.area();
         let frame_count = Line::from(format!("Frame Count: {}", frame_count.0)).right_aligned();
         frame.render_widget(bg_color.as_ref(), area);
         frame.render_widget(frame_count, area);

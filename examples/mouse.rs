@@ -112,13 +112,13 @@ fn bounce_balls(mut query: Query<(&Ball, &mut Position, &mut Velocity)>) {
 
 fn draw_balls(mut context: ResMut<RatatuiContext>, query: Query<(&Ball, &Position, &Color)>) {
     let _ = context.draw(|frame| {
-        let area = frame.size();
+        let area = frame.area();
         let buf = frame.buffer_mut();
         let count = query.iter().count();
         for (_, position, color) in query.iter() {
             let x = ((position.x * area.width as f32) as u16).min(area.width - 1);
             let y = ((position.y * area.height as f32) as u16).min(area.height - 1);
-            buf.get_mut(x, y).set_symbol("●").set_fg(**color);
+            buf[(x, y)].set_symbol("●").set_fg(**color);
         }
         frame.render_widget(format!("count: {count}"), area);
     });

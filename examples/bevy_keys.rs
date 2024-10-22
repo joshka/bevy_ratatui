@@ -115,7 +115,7 @@ fn draw_scene_system(
             }
         }
 
-        frame.render_widget(text.centered(), frame.size())
+        frame.render_widget(text.centered(), frame.area())
     })?;
     Ok(())
 }
