@@ -11,7 +11,7 @@ categories = ["command-line-interface"]
 keywords = ["cli", "ratatui", "terminal", "tui", "bevy"]
 
 [dependencies]
-bevy = { version = "0.14.2", default-features = false }
+bevy = { version = "0.15", default-features = false }
 bitflags = "2.6.0"
 color-eyre = "0.6.3"
 crossterm = "0.28.1"
@@ -29,7 +29,6 @@ opt-level = 3
 
 [dev-dependencies]
 rand = "0.8.5"
-bevy = { version = "0.14", default-features = false, features = [
-    "dynamic_linking",
+bevy = { version = "0.15", default-features = false, features = [
     "bevy_state",
 ] }

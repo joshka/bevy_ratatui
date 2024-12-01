@@ -383,6 +383,7 @@ fn send_key_events_with_emulation(
                 ButtonState::Pressed => ButtonState::Released,
                 ButtonState::Released => ButtonState::Pressed,
             },
+            repeat: e.0.state == ButtonState::Released,
             ..e.0
         };
         keyboard_input.send(reciprocal_event);
@@ -462,6 +463,9 @@ fn modifier_to_bevy(
         state,
         window,
         logical_key,
+
+        // Assuming that modifier keys do not repeat.
+        repeat: false,
     }
 }
 
@@ -499,6 +503,9 @@ fn key_event_to_bevy(
                     state,
                     window,
                     logical_key,
+
+                    // Repeat events are sent next frame based on 'repeated' tuple element.
+                    repeat: false,
                 },
                 *modifiers | mods,
                 repeated,
