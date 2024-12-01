@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [unreleased]
 
+## [0.6.5](https://github.com/joshka/bevy_ratatui/compare/v0.6.4...v0.6.5) - 2024-12-01
+
+### Other
+
+- Bevy 0.15 migration ([#27](https://github.com/joshka/bevy_ratatui/pull/27))
+
 ## [0.6.4](https://github.com/joshka/bevy_ratatui/compare/v0.6.3...v0.6.4) - 2024-10-22
 
 ### Other
