@@ -233,7 +233,7 @@ dependencies = [
  "bevy_reflect",
  "bevy_utils",
  "derive_more",
- "smol_str",
+ "smol_str 0.2.2",
 ]
 
 [[package]]
@@ -320,7 +320,7 @@ dependencies = [
  "crossterm",
  "rand",
  "ratatui",
- "smol_str",
+ "smol_str 0.3.2",
 ]
 
 [[package]]
@@ -340,7 +340,7 @@ dependencies = [
  "glam",
  "serde",
  "smallvec",
- "smol_str",
+ "smol_str 0.2.2",
 ]
 
 [[package]]
@@ -473,6 +473,15 @@ name = "bitflags"
 version = "2.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b048fb63fd8b5923fc5aa7b340d8e156aec7ec02f0c78fa8a6ddc2613f6f71de"
+
+[[package]]
+name = "borsh"
+version = "1.5.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2506947f73ad44e344215ccd6403ac2ae18cd8e046e581a441bf8d199f257f03"
+dependencies = [
+ "cfg_aliases",
+]
 
 [[package]]
 name = "bumpalo"
@@ -1457,6 +1466,16 @@ version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dd538fb6910ac1099850255cf94a94df6551fbdd602454387d0adb2d1ca6dead"
 dependencies = [
+ "serde",
+]
+
+[[package]]
+name = "smol_str"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9676b89cd56310a87b93dec47b11af744f34d5fc9f367b829474eec0a891350d"
+dependencies = [
+ "borsh",
  "serde",
 ]
 
