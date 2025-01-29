@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [unreleased]
 
+## [0.7.1](https://github.com/joshka/bevy_ratatui/compare/v0.7.0...v0.7.1) - 2025-01-29
+
+### Other
+
+- Bump the cargo-dependencies group across 1 directory with 4 updates ([#34](https://github.com/joshka/bevy_ratatui/pull/34))
+
 ## [0.6.4](https://github.com/joshka/bevy_ratatui/compare/v0.6.3...v0.6.4) - 2024-10-22
 
 ### Other
