@@ -45,11 +45,11 @@ struct Color(ratatui::style::Color);
 
 impl Color {
     fn random() -> Self {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         Self(ratatui::style::Color::Rgb(
-            rng.gen_range(0..255),
-            rng.gen_range(0..255),
-            rng.gen_range(0..255),
+            rng.random_range(0..255),
+            rng.random_range(0..255),
+            rng.random_range(0..255),
         ))
     }
 }
@@ -74,10 +74,10 @@ struct Velocity {
 
 impl Velocity {
     fn random() -> Self {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rng();
         Self {
-            x: rng.gen_range(-1.0..1.0),
-            y: rng.gen_range(-1.0..1.0),
+            x: rng.random_range(-1.0..1.0),
+            y: rng.random_range(-1.0..1.0),
         }
     }
 }

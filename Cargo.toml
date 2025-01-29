@@ -12,7 +12,7 @@ keywords = ["cli", "ratatui", "terminal", "tui", "bevy"]
 
 [dependencies]
 bevy = { version = "0.15", default-features = false }
-bitflags = "2.6.0"
+bitflags = "2.8.0"
 color-eyre = "0.6.3"
 crossterm = "0.28.1"
 ratatui = { version = "0.29.0", features = ["unstable-widget-ref"] }
@@ -28,7 +28,5 @@ opt-level = 1
 opt-level = 3
 
 [dev-dependencies]
-rand = "0.8.5"
-bevy = { version = "0.15", default-features = false, features = [
-    "bevy_state",
-] }
+rand = "0.9.0"
+bevy = { version = "0.15", default-features = false, features = ["bevy_state"] }
